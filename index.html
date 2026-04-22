@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e1117; --bg2: #161b24; --bg3: #1e2533;
+  --border: #2a3040; --text: #c8d0dc; --text-muted: #5a6475; --text-dim: #8892a0;
+  --accent: #4a9eff; --accent2: #2d7dd2;
+  --status-bar: #0d1520;
+  --danger: #e05555; --warn: #e0a030; --success: #3db87a; --info: #4a9eff;
+  --font-ui: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 4px;
+}
+.theme-pbtech    { --accent:#f47920; --accent2:#c05c10; --status-bar:#0f1825; --bg:#0e1117; --bg2:#141b24; --bg3:#1c2535; }
+.theme-jbhifi    { --accent:#ffd700; --accent2:#cc9900; --status-bar:#111111; --bg:#111116; --bg2:#18181e; --bg3:#222228; }
+.theme-harveynorman { --accent:#e8002d; --accent2:#b50024; --status-bar:#1a0008; --bg:#130a0c; --bg2:#1c1013; --bg3:#261519; }
+.theme-generic   { --accent:#4a9eff; --accent2:#2d7dd2; --status-bar:#0d1520; }
+.light-mode {
+  --bg:#f0f2f5; --bg2:#ffffff; --bg3:#e4e8ed;
+  --border:#d0d8e0; --text:#1a2030; --text-muted:#90a0b0; --text-dim:#607080;
+  --status-bar:#1a2535;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{background:var(--status-bar);border-bottom:2px solid var(--accent);height:46px;display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;position:relative;z-index:100;}
+.topbar-logo{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--accent);letter-spacing:1px;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.live-dot{width:8px;height:8px;background:var(--success);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(61,184,122,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(61,184,122,0);}}
+.topbar-divider{width:1px;height:24px;background:var(--border);flex-shrink:0;}
+.topbar-info{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.topbar-info span{color:var(--accent);}
+.topbar-tabs{display:flex;gap:3px;margin-left:8px;}
+.company-tab{padding:4px 12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:var(--font-ui);font-size:11px;font-weight:500;cursor:pointer;border-radius:2px;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px;}
+.company-tab:hover{border-color:var(--accent);color:var(--text);}
+.company-tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+.topbar-spacer{flex:1;}
+/* CALL TIMER */
+.call-timer{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:4px 10px;flex-shrink:0;}
+.timer-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;}
+.timer-display{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--success);min-width:76px;text-align:center;letter-spacing:1px;}
+.timer-display.running{color:var(--accent);}
+.timer-btn{padding:3px 8px;border:1px solid var(--border);background:var(--bg2);color:var(--text-dim);font-size:10px;font-family:var(--font-mono);cursor:pointer;border-radius:2px;transition:all 0.15s;text-transform:uppercase;}
+.timer-btn:hover{border-color:var(--accent);color:var(--accent);}
+.timer-btn.btn-start{border-color:var(--success);color:var(--success);}
+.timer-btn.btn-stop{border-color:var(--danger);color:var(--danger);}
+
+/* SETTINGS BUTTON */
+.settings-btn{position:fixed;left:0;top:50%;transform:translateY(-50%);background:var(--accent);color:#000;border:none;padding:10px 5px;cursor:pointer;border-radius:0 3px 3px 0;font-size:9px;font-family:var(--font-mono);font-weight:700;writing-mode:vertical-rl;letter-spacing:1.5px;z-index:500;transition:all 0.2s;text-transform:uppercase;}
+.settings-btn:hover{padding-left:9px;}
+
+/* SETTINGS PANEL */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:550;}
+.settings-overlay.open{display:block;}
+.settings-panel{position:fixed;left:-320px;top:0;width:320px;height:100vh;background:var(--bg2);border-right:1px solid var(--accent);z-index:600;transition:left 0.28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.settings-panel.open{left:0;}
+.settings-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--status-bar);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.settings-title{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;}
+.settings-close{background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;padding:4px 9px;font-size:14px;border-radius:2px;transition:all 0.15s;}
+.settings-close:hover{border-color:var(--danger);color:var(--danger);}
+.settings-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.settings-section-title{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+.toggle-label{font-size:12px;color:var(--text-dim);}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--bg3);border:1px solid var(--border);border-radius:20px;transition:0.2s;}
+.toggle-slider::before{content:'';position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:var(--text-muted);border-radius:50%;transition:0.2s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);border-color:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);background:#000;}
+.radio-row{display:flex;flex-direction:column;gap:5px;}
+.radio-label{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;}
+.radio-label span{font-size:12px;color:var(--text-dim);}
+.radio-label input{accent-color:var(--accent);}
+
+/* OUTAGE BANNER */
+.outage-banner{padding:4px 12px;background:rgba(224,160,48,0.08);border-bottom:1px solid rgba(224,160,48,0.25);font-size:11px;color:var(--warn);display:flex;align-items:center;gap:6px;flex-shrink:0;font-family:var(--font-mono);}
+
+/* CRM BODY */
+.crm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:245px 1fr 220px;grid-template-rows:1fr auto;}
+
+/* PANELS */
+.panel{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.panel:last-child{border-right:none;}
+.panel-sec{border-bottom:1px solid var(--border);}
+.sec-hdr{padding:5px 10px;background:var(--bg3);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);user-select:none;}
+.sec-body{padding:8px 10px;}
+
+/* FIELDS */
+.f-row{display:flex;flex-direction:column;gap:2px;margin-bottom:7px;}
+.f-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;}
+.f-in{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-ui);font-size:12px;padding:4px 7px;border-radius:2px;width:100%;transition:border-color 0.15s;}
+.f-in:focus{outline:none;border-color:var(--accent);}
+.f-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-ui);font-size:12px;padding:4px 7px;border-radius:2px;width:100%;cursor:pointer;}
+.f-sel:focus{outline:none;border-color:var(--accent);}
+.f-ta{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-ui);font-size:12px;padding:6px 7px;border-radius:2px;width:100%;resize:vertical;min-height:68px;line-height:1.5;}
+.f-ta:focus{outline:none;border-color:var(--accent);}
+.f-grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.mono{font-family:var(--font-mono);font-size:11px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:600;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.5px;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.b-active{background:rgba(61,184,122,0.12);color:var(--success);}
+.b-suspended{background:rgba(224,85,85,0.12);color:var(--danger);}
+.b-pending{background:rgba(224,160,48,0.12);color:var(--warn);}
+.b-closed{background:rgba(90,100,117,0.12);color:var(--text-muted);}
+.b-open{background:rgba(74,158,255,0.12);color:var(--info);}
+.b-escalated{background:rgba(224,85,85,0.12);color:var(--danger);}
+.b-resolved{background:rgba(61,184,122,0.12);color:var(--success);}
+.badge-pill{background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;}
+
+/* INTERACTION ID */
+.int-id{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);background:var(--bg3);padding:2px 6px;border-radius:2px;border:1px solid var(--border);}
+
+/* FLAGS */
+.flag-item{display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;}
+.flag-item label{cursor:pointer;font-size:11px;color:var(--text-dim);}
+.flag-item input{accent-color:var(--accent);}
+.flag-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* PRIORITY */
+.pri-row{display:flex;gap:4px;flex-wrap:wrap;}
+.pri-btn{padding:3px 9px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:10px;font-weight:600;cursor:pointer;border-radius:2px;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.15s;}
+.pri-btn.low.active{border-color:var(--success);color:var(--success);background:rgba(61,184,122,0.1);}
+.pri-btn.med.active{border-color:var(--warn);color:var(--warn);background:rgba(224,160,48,0.1);}
+.pri-btn.high.active{border-color:var(--danger);color:var(--danger);background:rgba(224,85,85,0.1);}
+.pri-btn.urg.active{border-color:#ff4444;color:#ff4444;background:rgba(255,68,68,0.12);}
+
+/* HISTORY */
+.hist-item{padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;}
+.hist-item:last-child{border-bottom:none;}
+.hist-item:hover{background:var(--bg3);margin:0 -10px;padding:7px 10px;border-radius:2px;}
+.hist-date{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.hist-type{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;}
+.hist-desc{font-size:11px;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-agent{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+
+/* ACTIONS */
+.act-btn{display:flex;align-items:center;gap:7px;width:100%;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-ui);font-size:11px;cursor:pointer;border-radius:2px;margin-bottom:5px;transition:all 0.15s;text-align:left;}
+.act-btn:hover{border-color:var(--accent);color:var(--text);background:var(--bg2);}
+.act-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+.act-btn.primary{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600;}
+.act-btn.primary:hover{opacity:0.85;}
+.act-icon{font-size:12px;width:16px;text-align:center;}
+
+/* CENTER */
+.center-panel{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+
+/* WRAPUP BAR */
+.wrapup-bar{display:flex;border-top:2px solid var(--accent);background:var(--status-bar);padding:7px 12px;gap:8px;align-items:center;grid-column:1/-1;flex-shrink:0;}
+.wu-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);white-space:nowrap;font-weight:700;}
+.wu-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 7px;border-radius:2px;min-width:140px;cursor:pointer;}
+.wu-btn{padding:5px 12px;background:var(--accent);border:none;color:#000;font-size:11px;font-weight:700;cursor:pointer;border-radius:2px;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap;}
+.wu-btn:hover{opacity:0.85;}
+.wu-btn.sec{background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);}
+.wu-btn.sec:hover{border-color:var(--accent);color:var(--text);background:var(--bg2);}
+
+/* STICKY NOTES */
+.sticky-wrap{position:fixed;inset:0;pointer-events:none;z-index:200;}
+.sticky-note{position:absolute;width:220px;min-height:155px;border-radius:2px;box-shadow:4px 4px 16px rgba(0,0,0,0.55);display:flex;flex-direction:column;pointer-events:all;}
+.sn-yellow{background:#f5e642;color:#1a1500;}
+.sn-blue{background:#4a9eff;color:#000e2a;}
+.sn-green{background:#3db87a;color:#001a0d;}
+.sn-pink{background:#ff6b9d;color:#2a000f;}
+.sn-orange{background:#f47920;color:#1a0800;}
+.sn-header{padding:5px 7px;display:flex;justify-content:space-between;align-items:center;cursor:grab;background:rgba(0,0,0,0.15);border-radius:2px 2px 0 0;position:relative;}
+.sn-header:active{cursor:grabbing;}
+.sn-title{background:transparent;border:none;font-size:10px;font-weight:700;font-family:var(--font-ui);color:inherit;width:100%;outline:none;text-transform:uppercase;letter-spacing:0.5px;}
+.sn-ctrls{display:flex;gap:3px;flex-shrink:0;}
+.sn-btn{width:16px;height:16px;border-radius:50%;border:none;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);color:inherit;transition:background 0.15s;}
+.sn-btn:hover{background:rgba(0,0,0,0.4);}
+.sn-cp{display:none;position:absolute;top:27px;right:4px;background:#1e2533;border:1px solid #2a3040;border-radius:3px;padding:5px;flex-wrap:wrap;gap:4px;width:86px;z-index:20;}
+.sn-cp.open{display:flex;}
+.sn-cdot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform 0.15s;}
+.sn-cdot:hover{transform:scale(1.25);border-color:white;}
+.sn-body{padding:7px 8px;flex:1;}
+.sn-ta{width:100%;min-height:110px;background:transparent;border:none;resize:none;font-family:var(--font-ui);font-size:12px;color:inherit;line-height:1.5;outline:none;}
+
+/* FAB */
+.add-note-fab{position:fixed;bottom:52px;right:14px;z-index:300;display:flex;align-items:center;gap:5px;background:var(--accent);border:none;color:#000;font-size:10px;font-weight:700;font-family:var(--font-mono);padding:7px 12px;border-radius:3px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 3px 14px rgba(0,0,0,0.4);}
+.add-note-fab:hover{opacity:0.85;transform:translateY(-2px);}
+
+/* SCROLLBARS */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted);}
+
+/* TOAST */
+#toastWrap{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:5px;pointer-events:none;align-items:center;}
+.toast{background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:7px 16px;border-radius:3px;font-size:12px;font-family:var(--font-mono);box-shadow:0 4px 14px rgba(0,0,0,0.5);opacity:0;transition:opacity 0.2s;white-space:nowrap;}
+
+/* DATA BTN */
+.data-btn{padding:7px;border-radius:2px;font-size:11px;cursor:pointer;font-family:var(--font-ui);width:100%;text-align:left;margin-bottom:4px;}
+.data-btn-danger{background:rgba(224,85,85,0.08);border:1px solid var(--danger);color:var(--danger);}
+.data-btn-normal{background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);}
+.data-btn-normal:hover{border-color:var(--accent);color:var(--text);}
+
+/* GROUP TOGGLE HEADER */
+.grp-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.grp-hdr .settings-section-title{margin-bottom:0;}
+.grp-children{padding-left:0;}
+
+/* MASTER TOGGLE ROW */
+.master-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.master-toggle-label{font-size:11px;font-weight:700;color:var(--text);letter-spacing:0.3px;}
+
+/* HELP MODAL */
+.help-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;}
+.help-overlay.hidden{display:none;}
+.help-modal{background:var(--bg2);border:1px solid var(--accent);border-radius:6px;max-width:600px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);}
+.help-modal-header{background:var(--status-bar);border-bottom:2px solid var(--accent);padding:18px 22px 16px;border-radius:6px 6px 0 0;}
+.help-greeting{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;}
+.help-title{font-size:20px;font-weight:700;color:var(--text);line-height:1.25;font-family:var(--font-ui);}
+.help-subtitle{font-size:12px;color:var(--text-dim);margin-top:5px;font-style:italic;}
+.help-body{padding:22px;}
+.help-section{margin-bottom:20px;}
+.help-section-title{font-family:var(--font-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.help-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.help-p{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:8px;}
+.help-steps{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:4px;}
+.help-steps li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-dim);line-height:1.6;}
+.help-step-num{background:var(--accent);color:#000;font-family:var(--font-mono);font-size:10px;font-weight:700;min-width:20px;height:20px;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.help-tip{background:var(--bg3);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 3px 3px 0;font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
+.help-tip strong{color:var(--text);}
+.help-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--bg3);border-radius:0 0 6px 6px;}
+.help-dont-show{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);cursor:pointer;user-select:none;}
+.help-dont-show input{accent-color:var(--accent);}
+.help-close-btn{padding:8px 22px;background:var(--accent);border:none;color:#000;font-size:12px;font-weight:700;cursor:pointer;border-radius:3px;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.5px;transition:opacity 0.15s;}
+.help-close-btn:hover{opacity:0.85;}
+.help-kbd{display:inline-block;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:1px 6px;border-radius:2px;}
+</style>
+</head>
+<body class="theme-generic">
+
+<!-- HELP MODAL -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-modal">
+    <div class="help-modal-header">
+      <div class="help-greeting">📋 Welcome to CRM Simulator</div>
+      <div class="help-title">Hello, it's Khalel here.</div>
+      <div class="help-subtitle">A practical tool for beginner contact centre agents — designed to keep things simple.</div>
+    </div>
+    <div class="help-body">
+
+      <div class="help-section">
+        <div class="help-section-title">What this is</div>
+        <p class="help-p">This CRM simulator recreates the core experience of a real contact centre system — customer lookup, case logging, call timing, and wrap-up — without the noise of a live production environment. It's built for <strong style="color:var(--text)">practice, onboarding, and building confidence</strong> before you touch a real customer record.</p>
+        <p class="help-p">Everything you type is saved automatically to your browser. Nothing leaves your device — there's no database, no server, no risk of affecting real customers.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Design philosophy</div>
+        <div class="help-tip"><strong>Start simple, add complexity as you grow.</strong> The Settings panel (left edge of screen) lets you hide any panel you don't need yet. As a beginner, you don't need to see everything at once — turn off the panels that distract you and focus on just one or two things at a time.</div>
+        <p class="help-p">Real contact centre screens are dense and overwhelming on day one. This tool is designed so you can <em style="color:var(--text)">gradually expose yourself</em> to more of the screen as you build familiarity — rather than trying to understand everything simultaneously.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Suggested beginner workflow</div>
+        <ol class="help-steps">
+          <li><span class="help-step-num">1</span><span>Pick a company from the tabs at the top — each one has its own colour theme and queue setup, just like switching between clients.</span></li>
+          <li><span class="help-step-num">2</span><span>Hit <span class="help-kbd">▶ START</span> on the call timer (top right) the moment a call begins. This builds the habit of tracking handle time from day one.</span></li>
+          <li><span class="help-step-num">3</span><span>Fill in <strong style="color:var(--text)">Caller Identity</strong> first — name, account number, phone. Verifying the caller's identity is always step one on a real call.</span></li>
+          <li><span class="help-step-num">4</span><span>Move to the <strong style="color:var(--text)">Case / Ticket</strong> panel in the centre. Select a category, set the status, and write case notes as the call progresses — don't wait until the end.</span></li>
+          <li><span class="help-step-num">5</span><span>Use <strong style="color:var(--text)">Quick Actions</strong> on the right to simulate what you'd do — transfer, hold, escalate. Click them during your practice scenario to build muscle memory.</span></li>
+          <li><span class="help-step-num">6</span><span>Stop the timer, fill in the <strong style="color:var(--text)">Wrap-Up Bar</strong> at the bottom with a disposition code, then hit <span class="help-kbd">Save &amp; Close</span>. This is After Call Work (ACW) — every second counts.</span></li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Sticky notes</div>
+        <p class="help-p">Use the <span class="help-kbd">✎ + NOTE</span> button (bottom right) to create floating notes during a call — great for jotting down order numbers, phonetic spellings, or things to double-check. Notes are draggable and persist between sessions. Each new note starts with a customer detail template.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Tips for practice</div>
+        <div class="help-tip"><strong>Less is more at first.</strong> In Settings, try turning off Account Status, Flags, and History. Practice the core loop: identity → case notes → wrap-up. Add panels back one by one each session.</div>
+        <div class="help-tip"><strong>Treat every field as real.</strong> Type realistic fake data — made-up names, plausible order numbers, actual issue descriptions. The more seriously you treat the simulation, the more transferable the skills.</div>
+        <div class="help-tip"><strong>You can reopen this guide</strong> any time from the <span class="help-kbd">? HELP</span> button in the Settings panel.</div>
+      </div>
+
+    </div>
+    <div class="help-footer">
+      <label class="help-dont-show">
+        <input type="checkbox" id="helpDontShow" onchange="saveHelpPref(this.checked)">
+        Don't show this again
+      </label>
+      <button class="help-close-btn" onclick="closeHelp()">Got it — let's go ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings overlay -->
+<div class="settings-overlay" id="sOverlay" onclick="closeSettings()"></div>
+
+<!-- Settings Panel -->
+<div class="settings-panel" id="sPanel">
+  <div class="settings-header">
+    <div class="settings-title">⚙ CRM Settings</div>
+    <button class="settings-close" onclick="closeSettings()">✕</button>
+  </div>
+
+  <!-- MASTER TOGGLE -->
+  <div class="settings-section">
+    <div class="master-toggle-row">
+      <span class="master-toggle-label">⊞ Toggle All Panels &amp; Features</span>
+      <label class="toggle"><input type="checkbox" id="togAll" checked onchange="toggleAll(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row" style="padding-top:0;">
+      <span class="toggle-label" style="font-size:11px;color:var(--text-muted);font-style:italic;">Switches every panel and feature on or off at once</span>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Company / Theme</div>
+    <div class="radio-row">
+      <label class="radio-label"><input type="radio" name="co" value="generic" checked onchange="setCompany(this.value)"><span>Generic Company</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="pbtech" onchange="setCompany(this.value)"><span>PB Tech</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="jbhifi" onchange="setCompany(this.value)"><span>JB Hi-Fi</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="harveynorman" onchange="setCompany(this.value)"><span>Harvey Norman</span></label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Appearance</div>
+    <div class="toggle-row"><span class="toggle-label">Light Mode</span>
+      <label class="toggle"><input type="checkbox" id="togLight" onchange="toggleLight(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row"><span class="toggle-label">Compact Density</span>
+      <label class="toggle"><input type="checkbox" id="togCompact" onchange="toggleCompact(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- GROUP: LEFT COLUMN -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Panels — Left Column</div>
+      <label class="toggle" title="Toggle all left column panels">
+        <input type="checkbox" id="grpLeft" checked onchange="toggleGroup('grpLeft', ['togCaller','togAcct','togFlags'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children" id="grpLeftChildren">
+      <div class="toggle-row"><span class="toggle-label">Caller Identity</span>
+        <label class="toggle"><input type="checkbox" id="togCaller" checked onchange="toggleSec('sCaller',this.checked);syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Account Status</span>
+        <label class="toggle"><input type="checkbox" id="togAcct" checked onchange="toggleSec('sAcct',this.checked);syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Customer Flags</span>
+        <label class="toggle"><input type="checkbox" id="togFlags" checked onchange="toggleSec('sFlags',this.checked);syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP: CENTRE & RIGHT -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Panels — Centre &amp; Right</div>
+      <label class="toggle" title="Toggle all centre and right panels">
+        <input type="checkbox" id="grpCentre" checked onchange="toggleGroup('grpCentre', ['togCase','togActions','togHist','togWrapup'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children" id="grpCentreChildren">
+      <div class="toggle-row"><span class="toggle-label">Case / Ticket Area</span>
+        <label class="toggle"><input type="checkbox" id="togCase" checked onchange="toggleSec('sCase',this.checked);syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Quick Actions</span>
+        <label class="toggle"><input type="checkbox" id="togActions" checked onchange="toggleSec('sActions',this.checked);syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Interaction History</span>
+        <label class="toggle"><input type="checkbox" id="togHist" checked onchange="toggleSec('sHistory',this.checked);syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Wrap-Up Bar</span>
+        <label class="toggle"><input type="checkbox" id="togWrapup" checked onchange="toggleEl('wrapupBar',this.checked);syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP: FEATURES -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Features</div>
+      <label class="toggle" title="Toggle all features">
+        <input type="checkbox" id="grpFeatures" checked onchange="toggleGroup('grpFeatures', ['togTimer','togSticky','togOutage'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children" id="grpFeaturesChildren">
+      <div class="toggle-row"><span class="toggle-label">Call Timer</span>
+        <label class="toggle"><input type="checkbox" id="togTimer" checked onchange="toggleEl('callTimer',this.checked);syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Sticky Notes</span>
+        <label class="toggle"><input type="checkbox" id="togSticky" checked onchange="toggleSticky(this.checked);syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Outage / Alert Banner</span>
+        <label class="toggle"><input type="checkbox" id="togOutage" checked onchange="toggleEl('outageBanner',this.checked);syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Data Management</div>
+    <button class="data-btn data-btn-normal" onclick="generateNewCase()">↻ New Case / Interaction ID</button>
+    <button class="data-btn data-btn-normal" onclick="clearForm()">⊘ Clear Current Interaction</button>
+    <button class="data-btn data-btn-danger" onclick="clearAll()">⚠ Wipe All Saved Data</button>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Help</div>
+    <button class="data-btn data-btn-normal" onclick="openHelp()">? Re-open Welcome Guide</button>
+  </div>
+</div>
+
+<!-- Settings Trigger -->
+<button class="settings-btn" onclick="toggleSettings()">SETTINGS</button>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="live-dot"></div>
+    <span id="coName">GenericCo</span>&nbsp;CRM
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-info">AGENT <span id="agentId">AGT-4821</span></div>
+  <div class="topbar-info">QUEUE <span id="queueName">GENERAL SUPPORT</span></div>
+  <div class="topbar-info"><span id="clockEl">--:--:--</span></div>
+  <div class="topbar-tabs">
+    <button class="company-tab active" data-co="generic" onclick="setCoTab(this)">Generic</button>
+    <button class="company-tab" data-co="pbtech" onclick="setCoTab(this)">PB Tech</button>
+    <button class="company-tab" data-co="jbhifi" onclick="setCoTab(this)">JB Hi-Fi</button>
+    <button class="company-tab" data-co="harveynorman" onclick="setCoTab(this)">Harvey Norman</button>
+  </div>
+  <div class="topbar-spacer"></div>
+  <!-- CALL TIMER -->
+  <div class="call-timer" id="callTimer">
+    <div class="timer-label">CALL TIME</div>
+    <div class="timer-display" id="timerDisp">00:00:00</div>
+    <button class="timer-btn btn-start" id="tBtnStart" onclick="tStart()">▶ START</button>
+    <button class="timer-btn btn-stop" onclick="tStop()">■ STOP</button>
+    <button class="timer-btn" onclick="tReset()">↺ RESET</button>
+  </div>
+</div>
+
+<!-- OUTAGE BANNER -->
+<div class="outage-banner" id="outageBanner">
+  ⚠ System maintenance scheduled this weekend — notify customers if querying outage
+</div>
+
+<!-- CRM BODY -->
+<div class="crm-body">
+
+  <!-- ===== LEFT PANEL ===== -->
+  <div class="panel" id="leftPanel">
+
+    <!-- Caller Identity -->
+    <div class="panel-sec" id="sCaller">
+      <div class="sec-hdr">Caller Identity <span class="int-id" id="intId">INT-00000</span></div>
+      <div class="sec-body">
+        <div class="f-row">
+          <div class="f-label">Full Name</div>
+          <input class="f-in" id="fName" placeholder="Customer full name..." data-s="fName">
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Account #</div>
+            <input class="f-in mono" id="fAcct" placeholder="ACC-..." data-s="fAcct">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Customer ID</div>
+            <input class="f-in mono" id="fCid" placeholder="CID-..." data-s="fCid">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Phone</div>
+          <input class="f-in" id="fPhone" placeholder="Phone number..." data-s="fPhone">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Email</div>
+          <input class="f-in" id="fEmail" placeholder="Email address..." data-s="fEmail">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Account Type</div>
+          <select class="f-sel" id="fType" data-s="fType">
+            <option value="">— Select —</option>
+            <option>Residential</option>
+            <option>Business</option>
+            <option>VIP / Premium</option>
+            <option>Staff / Employee</option>
+            <option>Trade / Wholesale</option>
+          </select>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Customer Since</div>
+            <input class="f-in" id="fSince" type="date" data-s="fSince">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Pref. Contact</div>
+            <select class="f-sel" id="fPref" data-s="fPref">
+              <option value="">—</option>
+              <option>Phone</option>
+              <option>Email</option>
+              <option>SMS</option>
+              <option>Live Chat</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Linked Accounts / Household</div>
+          <input class="f-in mono" id="fLinked" placeholder="e.g. ACC-1234, ACC-5678" data-s="fLinked" style="font-size:11px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Status -->
+    <div class="panel-sec" id="sAcct">
+      <div class="sec-hdr">Account Status</div>
+      <div class="sec-body">
+        <div class="f-row">
+          <div class="f-label">Standing</div>
+          <select class="f-sel" id="fStanding" data-s="fStanding" onchange="updStanding()">
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div style="margin:4px 0 8px;"><span class="badge b-active" id="standBadge">Active</span></div>
+        <div class="f-row">
+          <div class="f-label">Outstanding Balance</div>
+          <input class="f-in mono" id="fBal" placeholder="$0.00" data-s="fBal">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Next Payment Due</div>
+          <input class="f-in" id="fPayDue" type="date" data-s="fPayDue">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Active Products / Plan</div>
+          <input class="f-in" id="fPlan" placeholder="e.g. ExtendedCare Plus, 3-yr warranty" data-s="fPlan">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Recent Order / Invoice</div>
+          <input class="f-in mono" id="fLastOrd" placeholder="ORD- or INV-..." data-s="fLastOrd" style="font-size:11px;">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Recent Transaction Amt</div>
+          <input class="f-in mono" id="fLastAmt" placeholder="$0.00 · date" data-s="fLastAmt">
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Flags -->
+    <div class="panel-sec" id="sFlags">
+      <div class="sec-hdr">Customer Flags</div>
+      <div class="sec-body">
+        <div class="flag-item"><input type="checkbox" id="flVuln" data-s="flVuln"><div class="flag-dot" style="background:#ff9966"></div><label for="flVuln">Vulnerable Customer</label></div>
+        <div class="flag-item"><input type="checkbox" id="flDNC" data-s="flDNC"><div class="flag-dot" style="background:var(--danger)"></div><label for="flDNC">Do Not Contact</label></div>
+        <div class="flag-item"><input type="checkbox" id="flFraud" data-s="flFraud"><div class="flag-dot" style="background:var(--danger)"></div><label for="flFraud">Fraud Watch</label></div>
+        <div class="flag-item"><input type="checkbox" id="flDeceased" data-s="flDeceased"><div class="flag-dot" style="background:var(--text-muted)"></div><label for="flDeceased">Account Holder Deceased</label></div>
+        <div class="flag-item"><input type="checkbox" id="flMediation" data-s="flMediation"><div class="flag-dot" style="background:var(--warn)"></div><label for="flMediation">In Mediation / Legal</label></div>
+        <div class="flag-item"><input type="checkbox" id="flVIP" data-s="flVIP"><div class="flag-dot" style="background:var(--accent)"></div><label for="flVIP">VIP Priority</label></div>
+        <div class="flag-item"><input type="checkbox" id="flCallback" data-s="flCallback"><div class="flag-dot" style="background:var(--success)"></div><label for="flCallback">Callback Requested</label></div>
+        <div class="f-row" style="margin-top:8px;">
+          <div class="f-label">Flag Notes</div>
+          <textarea class="f-ta" id="flNotes" placeholder="Additional flag detail..." style="min-height:44px;" data-s="flNotes"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left panel -->
+
+  <!-- ===== CENTRE PANEL ===== -->
+  <div class="center-panel">
+
+    <div class="panel-sec" id="sCase">
+      <div class="sec-hdr">
+        Case / Ticket
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge b-open" id="caseBadge">Open</span>
+          <span class="int-id" id="caseNum">CASE-00000</span>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Channel</div>
+            <select class="f-sel" id="cChannel" data-s="cChannel">
+              <option>Inbound Call</option>
+              <option>Outbound Call</option>
+              <option>Email</option>
+              <option>Live Chat</option>
+              <option>Walk-in / In-Store</option>
+              <option>Callback</option>
+              <option>Social Media</option>
+              <option>Web Form</option>
+            </select>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Case Status</div>
+            <select class="f-sel" id="cStatus" data-s="cStatus" onchange="updCase()">
+              <option value="open">Open</option>
+              <option value="pending">Pending</option>
+              <option value="escalated">Escalated</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Category</div>
+            <select class="f-sel" id="cCat" data-s="cCat">
+              <option value="">— Select —</option>
+              <option>Billing / Payment</option>
+              <option>Technical Support</option>
+              <option>Returns / Refunds</option>
+              <option>Order Status</option>
+              <option>Product Enquiry</option>
+              <option>Complaint</option>
+              <option>Warranty Claim</option>
+              <option>Delivery / Courier</option>
+              <option>Price Match</option>
+              <option>Account Management</option>
+              <option>Recall / Safety</option>
+              <option>General Enquiry</option>
+            </select>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Sub-Category</div>
+            <input class="f-in" id="cSubCat" placeholder="Specify further..." data-s="cSubCat">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Priority</div>
+          <div class="pri-row" id="priRow">
+            <button class="pri-btn low" data-p="low" onclick="setPri('low')">Low</button>
+            <button class="pri-btn med active" data-p="med" onclick="setPri('med')">Medium</button>
+            <button class="pri-btn high" data-p="high" onclick="setPri('high')">High</button>
+            <button class="pri-btn urg" data-p="urg" onclick="setPri('urg')">Urgent</button>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Order / Invoice Ref</div>
+            <input class="f-in mono" id="cOrderRef" placeholder="ORD- or INV-..." data-s="cOrderRef" style="font-size:11px;">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Product / SKU</div>
+            <input class="f-in" id="cSKU" placeholder="Product or SKU..." data-s="cSKU">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Case Notes (customer-facing)</div>
+          <textarea class="f-ta" id="cNotes" placeholder="Document the interaction in detail — what the customer reported, what was discussed, next steps..." style="min-height:90px;" data-s="cNotes"></textarea>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Resolution / Action Taken</div>
+          <textarea class="f-ta" id="cResolution" placeholder="What was done to resolve or progress the issue..." data-s="cResolution"></textarea>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Internal Notes (agent only)</div>
+            <textarea class="f-ta" id="cInternal" placeholder="Internal notes not visible to customer..." style="min-height:56px;" data-s="cInternal"></textarea>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Follow-Up Task</div>
+            <textarea class="f-ta" id="cFollowup" placeholder="Describe any required follow-up..." style="min-height:56px;" data-s="cFollowup"></textarea>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Assigned To</div>
+            <input class="f-in" id="cAssigned" placeholder="Agent name or team..." data-s="cAssigned">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Est. Resolution Date</div>
+            <input class="f-in" id="cResDate" type="date" data-s="cResDate">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Script / Compliance Notes</div>
+          <input class="f-in" id="cScript" placeholder="Mandatory disclosures or compliance reminders noted..." data-s="cScript">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /centre -->
+
+  <!-- ===== RIGHT PANEL ===== -->
+  <div class="panel">
+
+    <!-- Quick Actions -->
+    <div class="panel-sec" id="sActions">
+      <div class="sec-hdr">Quick Actions</div>
+      <div class="sec-body">
+        <button class="act-btn primary" onclick="toast('Call transferred to next available agent')"><span class="act-icon">📞</span>Transfer Call</button>
+        <button class="act-btn" onclick="toast('Customer placed on hold')"><span class="act-icon">⏸</span>Place on Hold</button>
+        <button class="act-btn" onclick="toast('Conference call initiated')"><span class="act-icon">👥</span>Conference</button>
+        <button class="act-btn" onclick="toast('Callback scheduled for customer')"><span class="act-icon">↩</span>Schedule Callback</button>
+        <button class="act-btn" onclick="toast('Email sent to customer')"><span class="act-icon">✉</span>Send Email</button>
+        <button class="act-btn" onclick="toast('SMS sent to customer')"><span class="act-icon">💬</span>Send SMS</button>
+        <button class="act-btn" onclick="toast('Knowledge base opened')"><span class="act-icon">📚</span>Knowledge Base</button>
+        <button class="act-btn" onclick="toast('Case escalated to Tier 2 — manager notified')"><span class="act-icon">⬆</span>Escalate Case</button>
+        <button class="act-btn" onclick="toast('New linked case created')"><span class="act-icon">➕</span>New Linked Case</button>
+        <button class="act-btn danger" onclick="toast('Case flagged for quality review')"><span class="act-icon">⚑</span>Flag for Review</button>
+        <button class="act-btn danger" onclick="toast('Fraud alert raised — security notified')"><span class="act-icon">🔒</span>Raise Fraud Alert</button>
+      </div>
+    </div>
+
+    <!-- Interaction History -->
+    <div class="panel-sec" id="sHistory" style="flex:1;">
+      <div class="sec-hdr">Interaction History <span class="badge-pill">5</span></div>
+      <div class="sec-body">
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">14 Apr 2025 · 09:14 AM · 7m 22s</div>
+          <div class="hist-desc">Billing query — double charged for extended warranty</div>
+          <div class="hist-agent">AGT-3812 · Sarah T.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">EMAIL</span>
+            <span class="badge b-resolved" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">2 Apr 2025 · 03:41 PM</div>
+          <div class="hist-desc">Refund request for DOA item — approved</div>
+          <div class="hist-agent">AGT-4102 · Marcus H.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-pending" style="font-size:9px;padding:1px 5px;">Pending</span>
+          </div>
+          <div class="hist-date">28 Mar 2025 · 11:05 AM · 14m 8s</div>
+          <div class="hist-desc">Technical issue — laptop not booting after update</div>
+          <div class="hist-agent">AGT-4821 · You</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">LIVE CHAT</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">15 Mar 2025 · 02:33 PM · 22m</div>
+          <div class="hist-desc">Price match enquiry — competitor pricing</div>
+          <div class="hist-agent">BOT → AGT-3910 · Priya L.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Closed</span>
+          </div>
+          <div class="hist-date">1 Feb 2025 · 04:52 PM · 3m 45s</div>
+          <div class="hist-desc">Account verification check</div>
+          <div class="hist-agent">AGT-2244 · James F.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right panel -->
+
+  <!-- WRAP-UP BAR -->
+  <div class="wrapup-bar" id="wrapupBar">
+    <span class="wu-label">Wrap-Up:</span>
+    <select class="wu-sel" id="wuCode" data-s="wuCode">
+      <option value="">— Disposition Code —</option>
+      <option>Resolved — First Contact</option>
+      <option>Resolved — Follow-Up Required</option>
+      <option>Escalated — Tier 2</option>
+      <option>Escalated — Manager</option>
+      <option>Callback Scheduled</option>
+      <option>Voicemail Left</option>
+      <option>Customer Abandoned</option>
+      <option>Wrong Number</option>
+      <option>No Fault Found</option>
+      <option>Referred to Store</option>
+      <option>Refund Processed</option>
+      <option>Warranty Lodged</option>
+      <option>Repeat Contact</option>
+    </select>
+    <select class="wu-sel" id="wuSurvey" data-s="wuSurvey" style="min-width:115px;">
+      <option value="">Survey Consent</option>
+      <option>Consented</option>
+      <option>Declined</option>
+      <option>No Response</option>
+    </select>
+    <input class="f-in" id="wuACW" placeholder="ACW secs..." style="width:90px;padding:4px 7px;" data-s="wuACW">
+    <div style="flex:1;"></div>
+    <button class="wu-btn" onclick="saveClose()">✓ Save &amp; Close</button>
+    <button class="wu-btn sec" onclick="saveDraft()">Save Draft</button>
+    <button class="wu-btn sec" onclick="newInteraction()">⊕ New</button>
+  </div>
+
+</div><!-- /crm-body -->
+
+<!-- Sticky Notes -->
+<div class="sticky-wrap" id="stickyWrap"></div>
+<button class="add-note-fab" id="noteFab" onclick="addNote()">✎ + NOTE</button>
+
+<!-- Toast -->
+<div id="toastWrap"></div>
+
+<script>
+// ========== COMPANY CONFIG ==========
+const CO = {
+  generic:      { name:'GenericCo',      agent:'AGT-4821', queue:'GENERAL SUPPORT',    outage:'System maintenance scheduled this weekend — notify customers if querying an outage' },
+  pbtech:       { name:'PB Tech',         agent:'PBT-4821', queue:'TECH SUPPORT — NZ',  outage:'Known Issue: Online order tracking delays of 24–48 hrs — advise customers accordingly' },
+  jbhifi:       { name:'JB Hi-Fi',        agent:'JBH-4821', queue:'CUSTOMER SERVICE',   outage:'Price match policy updated 15 Apr 2025 — refer to KB article PM-2025-04 for details' },
+  harveynorman: { name:'Harvey Norman',   agent:'HN-4821',  queue:'WARRANTY & SERVICE', outage:'Franchisee system outage: Manukau store — escalate Manukau queries to head office' }
+};
+
+let curCo = 'generic';
+let tSecs = 0, tRunning = false, tInt = null;
+let curPri = 'med';
+let dragState = null;
+let noteCounter = 0;
+
+const NOTE_COLORS = ['yellow','blue','green','pink','orange'];
+const COLOR_HEX = {yellow:'#f5e642',blue:'#4a9eff',green:'#3db87a',pink:'#ff6b9d',orange:'#f47920'};
+const TEMPLATE = `CUSTOMER DETAILS
+────────────────
+Name: 
+Account #: 
+Phone: 
+Email: 
+Issue: 
+
+────────────────
+Action taken:
+Follow-up needed: `;
+
+// ========== INIT ==========
+function init() {
+  loadFields();
+  setInterval(updateClock, 1000); updateClock();
+
+  // Company
+  const co = ls('crm_co') || 'generic';
+  setCompany(co);
+
+  // IDs
+  const iid = ls('crm_iid'); const cid = ls('crm_cid');
+  if (iid) { document.getElementById('intId').textContent = iid; document.getElementById('caseNum').textContent = cid || 'CASE-00000'; }
+  else generateNewCase();
+
+  // Priority
+  setPri(ls('crm_pri') || 'med');
+
+  // Status badges
+  updStanding(); updCase();
+
+  // Settings toggles from storage
+  loadToggles();
+
+  // Notes
+  loadNotes();
+
+  // Auto-save
+  document.querySelectorAll('[data-s]').forEach(el => {
+    el.addEventListener('input', () => saveField(el));
+    el.addEventListener('change', () => saveField(el));
+  });
+}
+
+// ========== LOCALSTORAGE HELPERS ==========
+function ls(k) { return localStorage.getItem(k); }
+function lset(k,v) { localStorage.setItem(k,v); }
+
+function saveField(el) {
+  const k = 'crm_f_' + el.getAttribute('data-s');
+  lset(k, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value);
+}
+
+function loadFields() {
+  document.querySelectorAll('[data-s]').forEach(el => {
+    const v = ls('crm_f_' + el.getAttribute('data-s'));
+    if (v !== null) { el.type === 'checkbox' ? (el.checked = v === '1') : (el.value = v); }
+  });
+}
+
+// ========== CLOCK ==========
+function updateClock() {
+  document.getElementById('clockEl').textContent = new Date().toLocaleTimeString('en-NZ',{hour12:false});
+}
+
+// ========== COMPANY ==========
+function setCompany(co) {
+  curCo = co; lset('crm_co', co);
+  const c = CO[co];
+  document.body.className = document.body.className.replace(/theme-\w+/g,'').trim() + ' theme-' + co;
+  if (document.body.classList.contains('light-mode')) document.body.classList.add('light-mode');
+  document.getElementById('coName').textContent = c.name;
+  document.getElementById('agentId').textContent = c.agent;
+  document.getElementById('queueName').textContent = c.queue;
+  document.getElementById('outageBanner').textContent = '⚠  ' + c.outage;
+  // Radio
+  document.querySelectorAll('input[name="co"]').forEach(r => r.checked = r.value === co);
+  // Tabs
+  document.querySelectorAll('.company-tab').forEach(t => t.classList.toggle('active', t.dataset.co === co));
+}
+
+function setCoTab(btn) { setCompany(btn.dataset.co); }
+
+// ========== CALL TIMER ==========
+function tStart() {
+  if (tRunning) return; tRunning = true;
+  document.getElementById('timerDisp').classList.add('running');
+  document.getElementById('tBtnStart').classList.remove('btn-start');
+  tInt = setInterval(() => { tSecs++; tRenderDisp(); }, 1000);
+}
+function tStop() {
+  if (!tRunning) return; tRunning = false;
+  clearInterval(tInt);
+  document.getElementById('timerDisp').classList.remove('running');
+  document.getElementById('tBtnStart').classList.add('btn-start');
+}
+function tReset() { tStop(); tSecs = 0; tRenderDisp(); }
+function tRenderDisp() {
+  const h = String(Math.floor(tSecs/3600)).padStart(2,'0');
+  const m = String(Math.floor((tSecs%3600)/60)).padStart(2,'0');
+  const s = String(tSecs%60).padStart(2,'0');
+  document.getElementById('timerDisp').textContent = `${h}:${m}:${s}`;
+}
+
+// ========== SETTINGS ==========
+function toggleSettings() {
+  document.getElementById('sPanel').classList.toggle('open');
+  document.getElementById('sOverlay').classList.toggle('open');
+}
+function closeSettings() {
+  document.getElementById('sPanel').classList.remove('open');
+  document.getElementById('sOverlay').classList.remove('open');
+}
+function toggleLight(on) {
+  document.body.classList.toggle('light-mode', on); lset('crm_light', on?'1':'0');
+}
+function toggleCompact(on) {
+  document.querySelectorAll('.sec-body').forEach(el => el.style.padding = on ? '5px 8px' : '8px 10px');
+  document.querySelectorAll('.f-row').forEach(el => el.style.marginBottom = on ? '4px' : '7px');
+  lset('crm_compact', on?'1':'0');
+}
+function toggleSec(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = show ? '' : 'none';
+  lset('crm_tog_' + id, show?'1':'0');
+}
+function toggleEl(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = show ? '' : 'none';
+  lset('crm_tog_' + id, show?'1':'0');
+}
+function toggleSticky(show) {
+  document.getElementById('stickyWrap').style.display = show ? '' : 'none';
+  document.getElementById('noteFab').style.display = show ? 'flex' : 'none';
+  lset('crm_tog_sticky', show?'1':'0');
+}
+
+function loadToggles() {
+  const panelMap = [
+    {id:'togCaller',  sec:'sCaller'},
+    {id:'togAcct',    sec:'sAcct'},
+    {id:'togFlags',   sec:'sFlags'},
+    {id:'togCase',    sec:'sCase'},
+    {id:'togActions', sec:'sActions'},
+    {id:'togHist',    sec:'sHistory'},
+    {id:'togWrapup',  el:'wrapupBar'},
+    {id:'togTimer',   el:'callTimer'},
+    {id:'togOutage',  el:'outageBanner'},
+  ];
+  panelMap.forEach(({id, sec, el}) => {
+    const key = 'crm_tog_' + (sec || el);
+    const v = ls(key);
+    if (v !== null) {
+      const show = v === '1';
+      const cb = document.getElementById(id);
+      if (cb) cb.checked = show;
+      if (sec) toggleSec(sec, show); else toggleEl(el, show);
+    }
+  });
+  const sv = ls('crm_tog_sticky');
+  if (sv !== null) {
+    const show = sv === '1';
+    document.getElementById('togSticky').checked = show;
+    toggleSticky(show);
+  }
+  if (ls('crm_light') === '1') { document.getElementById('togLight').checked = true; toggleLight(true); }
+  if (ls('crm_compact') === '1') { document.getElementById('togCompact').checked = true; toggleCompact(true); }
+
+  // Sync group headers and master toggle to reflect loaded state
+  syncGroupToggle('grpLeft',    ['togCaller','togAcct','togFlags']);
+  syncGroupToggle('grpCentre',  ['togCase','togActions','togHist','togWrapup']);
+  syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage']);
+  syncMasterToggle();
+}
+
+// ========== BADGES ==========
+function updStanding() {
+  const v = document.getElementById('fStanding').value;
+  const b = document.getElementById('standBadge');
+  b.className = 'badge b-' + v;
+  b.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+}
+function updCase() {
+  const v = document.getElementById('cStatus').value;
+  const b = document.getElementById('caseBadge');
+  b.className = 'badge b-' + v;
+  b.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+}
+
+// ========== PRIORITY ==========
+function setPri(p) {
+  curPri = p;
+  document.querySelectorAll('.pri-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  lset('crm_pri', p);
+}
+
+// ========== CASE IDs ==========
+function generateNewCase() {
+  const iid = 'INT-' + (10000 + Math.floor(Math.random()*90000));
+  const cid = 'CASE-' + (10000 + Math.floor(Math.random()*90000));
+  document.getElementById('intId').textContent = iid;
+  document.getElementById('caseNum').textContent = cid;
+  lset('crm_iid', iid); lset('crm_cid', cid);
+  toast('↻ New interaction: ' + cid);
+}
+
+// ========== FORM ACTIONS ==========
+function saveClose() { saveDraft(); tStop(); toast('✓ Interaction saved and closed'); }
+function saveDraft() { document.querySelectorAll('[data-s]').forEach(saveField); toast('✓ Draft saved to browser storage'); }
+function newInteraction() {
+  if (!confirm('Start a new interaction? Unsaved data will be lost.')) return;
+  clearForm(); generateNewCase(); toast('⊕ New interaction started');
+}
+function clearForm() {
+  document.querySelectorAll('[data-s]').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false; else el.value = '';
+    localStorage.removeItem('crm_f_' + el.getAttribute('data-s'));
+  });
+  setPri('med'); updStanding(); updCase(); tReset();
+}
+function clearAll() {
+  if (!confirm('This will wipe all saved CRM data including sticky notes. Continue?')) return;
+  Object.keys(localStorage).filter(k => k.startsWith('crm_')).forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// ========== TOAST ==========
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.getElementById('toastWrap').appendChild(t);
+  requestAnimationFrame(() => t.style.opacity = '1');
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 220); }, 2200);
+}
+
+// ========== STICKY NOTES ==========
+function addNote(content, color, x, y, title, id) {
+  const nid = id || ('n' + Date.now() + '_' + noteCounter++);
+  const px = x != null ? x : (80 + Math.random() * 300);
+  const py = y != null ? y : (60 + Math.random() * 200);
+  const nc = color || 'yellow';
+  const txt = content != null ? content : TEMPLATE;
+  const tit = title || 'NOTE';
+
+  const el = document.createElement('div');
+  el.className = 'sticky-note sn-' + nc;
+  el.id = nid;
+  el.style.cssText = `left:${px}px;top:${py}px;z-index:200;`;
+
+  el.innerHTML = `
+    <div class="sn-header" onmousedown="dragStart(event,'${nid}')">
+      <input class="sn-title" value="${escH(tit)}" placeholder="NOTE" onmousedown="event.stopPropagation()" oninput="saveNotes()">
+      <div class="sn-ctrls">
+        <button class="sn-btn" onclick="toggleCP('${nid}')" title="Color">◉</button>
+        <button class="sn-btn" onclick="delNote('${nid}')" title="Delete">✕</button>
+      </div>
+      <div class="sn-cp" id="cp_${nid}">
+        ${NOTE_COLORS.map(c=>`<div class="sn-cdot" style="background:${COLOR_HEX[c]}" title="${c}" onclick="changeColor('${nid}','${c}')"></div>`).join('')}
+      </div>
+    </div>
+    <div class="sn-body">
+      <textarea class="sn-ta" oninput="saveNotes()">${escH(txt)}</textarea>
+    </div>`;
+
+  document.getElementById('stickyWrap').appendChild(el);
+  saveNotes();
+}
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleCP(nid) {
+  const cp = document.getElementById('cp_' + nid);
+  cp.classList.toggle('open');
+}
+function changeColor(nid, color) {
+  const el = document.getElementById(nid);
+  NOTE_COLORS.forEach(c => el.classList.remove('sn-' + c));
+  el.classList.add('sn-' + color);
+  document.getElementById('cp_' + nid).classList.remove('open');
+  saveNotes();
+}
+function delNote(nid) {
+  const el = document.getElementById(nid);
+  if (el) el.remove();
+  saveNotes();
+}
+function saveNotes() {
+  const notes = [];
+  document.querySelectorAll('.sticky-note').forEach(el => {
+    const c = NOTE_COLORS.find(c => el.classList.contains('sn-' + c)) || 'yellow';
+    const ta = el.querySelector('.sn-ta');
+    const ti = el.querySelector('.sn-title');
+    notes.push({ id: el.id, color: c, x: parseInt(el.style.left), y: parseInt(el.style.top), title: ti?.value || '', content: ta?.value || '' });
+  });
+  lset('crm_notes', JSON.stringify(notes));
+}
+function loadNotes() {
+  try {
+    (JSON.parse(ls('crm_notes') || '[]')).forEach(n => addNote(n.content, n.color, n.x, n.y, n.title, n.id));
+  } catch(e) {}
+}
+
+// ========== DRAG ==========
+function dragStart(e, nid) {
+  if (['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName)) return;
+  const el = document.getElementById(nid);
+  const r = el.getBoundingClientRect();
+  dragState = { nid, ox: e.clientX - r.left, oy: e.clientY - r.top };
+  el.style.zIndex = 999;
+  e.preventDefault();
+}
+document.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const el = document.getElementById(dragState.nid);
+  if (!el) return;
+  el.style.left = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, e.clientX - dragState.ox)) + 'px';
+  el.style.top  = Math.max(46, Math.min(window.innerHeight - el.offsetHeight, e.clientY - dragState.oy)) + 'px';
+});
+document.addEventListener('mouseup', () => { if (dragState) { saveNotes(); dragState = null; } });
+
+// ========== HELP MODAL ==========
+function openHelp() {
+  document.getElementById('helpOverlay').classList.remove('hidden');
+  closeSettings();
+}
+function closeHelp() {
+  document.getElementById('helpOverlay').classList.add('hidden');
+}
+function saveHelpPref(dontShow) {
+  lset('crm_hideHelp', dontShow ? '1' : '0');
+}
+function maybeShowHelp() {
+  if (ls('crm_hideHelp') === '1') return;
+  document.getElementById('helpOverlay').classList.remove('hidden');
+}
+
+// ========== MASTER TOGGLE ==========
+// All panel/feature toggle IDs (excludes appearance toggles like light/compact)
+const ALL_TOGGLE_IDS = ['togCaller','togAcct','togFlags','togCase','togActions','togHist','togWrapup','togTimer','togSticky','togOutage'];
+const TOGGLE_ACTIONS = {
+  togCaller:  (v) => toggleSec('sCaller', v),
+  togAcct:    (v) => toggleSec('sAcct', v),
+  togFlags:   (v) => toggleSec('sFlags', v),
+  togCase:    (v) => toggleSec('sCase', v),
+  togActions: (v) => toggleSec('sActions', v),
+  togHist:    (v) => toggleSec('sHistory', v),
+  togWrapup:  (v) => toggleEl('wrapupBar', v),
+  togTimer:   (v) => toggleEl('callTimer', v),
+  togSticky:  (v) => toggleSticky(v),
+  togOutage:  (v) => toggleEl('outageBanner', v),
+};
+
+function toggleAll(on) {
+  ALL_TOGGLE_IDS.forEach(id => {
+    const cb = document.getElementById(id);
+    if (cb) { cb.checked = on; TOGGLE_ACTIONS[id](on); }
+  });
+  // Sync group headers
+  ['grpLeft','grpCentre','grpFeatures'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = on;
+  });
+  lset('crm_togAll', on ? '1' : '0');
+}
+
+function syncMasterToggle() {
+  const allOn = ALL_TOGGLE_IDS.every(id => {
+    const cb = document.getElementById(id);
+    return cb ? cb.checked : true;
+  });
+  const master = document.getElementById('togAll');
+  if (master) master.checked = allOn;
+}
+
+// ========== GROUP TOGGLES ==========
+function toggleGroup(groupId, childIds, on) {
+  childIds.forEach(id => {
+    const cb = document.getElementById(id);
+    if (cb) { cb.checked = on; TOGGLE_ACTIONS[id](on); }
+  });
+  syncMasterToggle();
+  lset('crm_grp_' + groupId, on ? '1' : '0');
+}
+
+function syncGroupToggle(groupId, childIds) {
+  const allOn = childIds.every(id => {
+    const cb = document.getElementById(id);
+    return cb ? cb.checked : true;
+  });
+  const grpCb = document.getElementById(groupId);
+  if (grpCb) grpCb.checked = allOn;
+  syncMasterToggle();
+}
+
+// ========== START ==========
+init();
+maybeShowHelp();
+</script>
+</body>
+</html>
