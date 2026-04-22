@@ -1,7 +1,5 @@
 # CRM Simulator
 
-Link to Site: https://kcarlos57.github.io/CRM-Simulator/
-
 A browser-based contact centre CRM training tool for beginner agents. Practice real workflows — caller identity, case logging, call timing, and wrap-up — in a safe, offline environment with no live data, no server, and no risk of affecting real customers.
 
 ---
@@ -40,13 +38,27 @@ Everything you type is saved automatically to your browser's `localStorage`. You
 Follow this loop to simulate a real contact centre interaction from start to finish:
 
 1. **Pick a company** from the tabs in the top bar — each has its own colour theme, agent ID, queue name, and outage message
-2. **Start the call timer** (top right) the moment the call begins — builds the habit of tracking handle time
-3. **Fill in Caller Identity** first: name, account number, phone. Verifying the caller is always step one
-4. **Log the case** in the centre panel: select a category, set priority, and write case notes as the call progresses — don't wait until the end
-5. **Use Quick Actions** on the right to simulate transfers, holds, escalations, and other mid-call actions
-6. **Stop the timer** when the call ends
-7. **Fill in the Wrap-Up Bar** at the bottom: pick a disposition code and survey consent — the ACW timer starts automatically when you click Save & Close
-8. **Save & Close** the interaction
+2. **Load a scenario** from the **▤ SCENARIO** bar at the top of the Caller Identity panel, or fill in the fields manually
+3. **Start the call timer** (top right) the moment the call begins — builds the habit of tracking handle time
+4. **Fill in Caller Identity** first: name, account number, phone. Verifying the caller is always step one
+5. **Log the case** in the centre panel: select a category, set priority, and write case notes as the call progresses — don't wait until the end
+6. **Use Quick Actions** on the right to simulate transfers, holds, escalations, and other mid-call actions
+7. **Stop the timer** when the call ends
+8. **Fill in the Wrap-Up Bar** at the bottom: pick a disposition code and survey consent — the ACW timer starts automatically when you click Save & Close
+9. **Save & Close** the interaction
+
+### Example Customer Scenarios
+
+The **▤ SCENARIO** dropdown at the top of the Caller Identity panel contains 22 pre-built scenarios. Select one and click **Load ↓** to instantly populate all customer fields, account status, flags, and case notes.
+
+The list is ordered with the two structured training scenarios pinned to the top, followed by all 20 example customers:
+
+**Training Scenarios (top of list):**
+- **Scenario 1 — Escalate a Complaint to Your Supervisor:** An inbound complaint where the customer doesn't meet the returns policy. Practise placing the customer on hold and briefing your supervisor using contact centre abbreviations and terminology (IB, CX, RTN, NFF, POH, FCR, ACW).
+- **Scenario 2 — Resolve a Product Specification Complaint:** A customer claims their gaming computer doesn't perform to the manufacturer's advertised specifications. Practise verifying order details, checking specs, asking diagnostic questions, and determining the correct resolution under the Consumer Guarantees Act.
+
+**Example Customers:**
+Twenty fictional customers covering a wide range of call types, account standings, and flag combinations across all four company themes. Each loads with a realistic scenario briefing in the case notes field.
 
 ### Settings Panel
 
@@ -73,6 +85,16 @@ Click **✎ + NOTE** (bottom right) to create a floating note. Notes are draggab
 ---
 
 ## Features
+
+### Example Customer Scenarios
+- **▤ SCENARIO** bar at the top of the Caller Identity panel
+- 22 pre-built entries in a flat, ordered list — no company grouping
+- **2 structured training scenarios** pinned to the top:
+  - *Scenario 1:* Escalate a complaint to a supervisor — practise contact centre abbreviations and terminology while the customer is on hold
+  - *Scenario 2:* Resolve a product specification complaint — practise checking specs, running diagnostics, and applying the Consumer Guarantees Act
+- **20 example customers** spread across all four company themes, covering: billing queries, warranty claims, DOA returns, escalations, VIP accounts, fraud watch, vulnerable customers, deceased accounts, in-mediation cases, repeat complaints, and more
+- Loading a scenario fills all Caller Identity fields, Account Status fields, flag checkboxes, and seeds the Case Notes with a detailed briefing
+- All loaded data is immediately saved to localStorage via Save Draft
 
 ### Company Themes
 - Four company profiles: **Generic Company**, **PB Tech**, **JB Hi-Fi**, **Harvey Norman**
@@ -143,6 +165,17 @@ Click **✎ + NOTE** (bottom right) to create a floating note. Notes are draggab
 ---
 
 ## Changelog
+
+### v0.5.0 — Example Customer Database & Training Scenarios
+- Added **▤ SCENARIO** loader bar to the top of the Caller Identity panel
+- Built a database of **22 pre-built scenarios** in `crm-simulator.js`:
+  - 2 structured training scenarios pinned to the top of the list
+  - 20 example customers across Generic Company, PB Tech, JB Hi-Fi, and Harvey Norman
+- **Scenario 1** teaches supervisor escalation using contact centre abbreviations and terminology (IB, CX, RTN, NFF, POH, FCR, ACW), with sample briefing phrases and resolution options
+- **Scenario 2** teaches product specification complaint resolution, including a step-by-step diagnostic process and reference to the Consumer Guarantees Act 1993
+- Loading a scenario populates all Caller Identity, Account Status, flags, and case note fields in one click
+- Dropdown is a flat ordered list — no company grouping, training scenarios always at top
+- Loaded data is immediately persisted via Save Draft
 
 ### v0.4.0 — Accessibility & Timer Improvements
 - Added **Accessibility section** to Settings panel with Font, Color Contrast, and Text Size controls

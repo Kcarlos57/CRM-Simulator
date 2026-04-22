@@ -280,6 +280,60 @@ body {
 .data-btn-normal  { background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); }
 .data-btn-normal:hover { border-color: var(--accent); color: var(--text); }
 
+/* ── PRESET CUSTOMER LOADER ── */
+.preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 5px 8px;
+  margin-bottom: 10px;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+.preset-bar:focus-within,
+.preset-bar:hover { opacity: 1; }
+.preset-label {
+  font-family: var(--font-mono);
+  font-size: 0.69rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.preset-sel {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 0.77rem;
+  padding: 3px 5px;
+  border-radius: 2px;
+  cursor: pointer;
+  min-width: 0;
+}
+.preset-sel:focus { outline: none; border-color: var(--accent); color: var(--text); }
+.preset-load-btn {
+  padding: 3px 9px;
+  background: var(--accent);
+  border: none;
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 0.77rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.preset-load-btn:hover { opacity: 0.8; }
+
 /* ============================================================
    OUTAGE BANNER
    ============================================================ */
