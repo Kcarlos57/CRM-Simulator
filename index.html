@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="crm-simulator.css">
+</head>
+<body class="theme-generic">
+
+<!-- ============================================================
+     HELP MODAL
+     ============================================================ -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-modal">
+    <div class="help-modal-header">
+      <div class="help-greeting">📋 Welcome to CRM Simulator</div>
+      <div class="help-title">Hello, it's Khalel here.</div>
+      <div class="help-subtitle">A practical tool for beginner contact centre agents — designed to keep things simple.</div>
+    </div>
+    <div class="help-body">
+
+      <div class="help-section">
+        <div class="help-section-title">What this is</div>
+        <p class="help-p">This CRM simulator recreates the core experience of a real contact centre system — customer lookup, case logging, call timing, and wrap-up — without the noise of a live production environment. It's built for <strong style="color:var(--text)">practice, onboarding, and building confidence</strong> before you touch a real customer record.</p>
+        <p class="help-p">Everything you type is saved automatically to your browser. Nothing leaves your device — there's no database, no server, no risk of affecting real customers.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Design philosophy</div>
+        <div class="help-tip"><strong>Start simple, add complexity as you grow.</strong> The Settings panel (left edge of screen) lets you hide any panel you don't need yet. As a beginner, you don't need to see everything at once — turn off the panels that distract you and focus on just one or two things at a time.</div>
+        <p class="help-p">Real contact centre screens are dense and overwhelming on day one. This tool is designed so you can <em style="color:var(--text)">gradually expose yourself</em> to more of the screen as you build familiarity — rather than trying to understand everything simultaneously.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Suggested beginner workflow</div>
+        <ol class="help-steps">
+          <li><span class="help-step-num">1</span><span>Pick a company from the tabs at the top — each one has its own colour theme and queue setup, just like switching between clients.</span></li>
+          <li><span class="help-step-num">2</span><span>Hit <span class="help-kbd">▶ START</span> on the call timer (top right) the moment a call begins. This builds the habit of tracking handle time from day one.</span></li>
+          <li><span class="help-step-num">3</span><span>Fill in <strong style="color:var(--text)">Caller Identity</strong> first — name, account number, phone. Verifying the caller's identity is always step one on a real call.</span></li>
+          <li><span class="help-step-num">4</span><span>Move to the <strong style="color:var(--text)">Case / Ticket</strong> panel in the centre. Select a category, set the status, and write case notes as the call progresses — don't wait until the end.</span></li>
+          <li><span class="help-step-num">5</span><span>Use <strong style="color:var(--text)">Quick Actions</strong> on the right to simulate what you'd do — transfer, hold, escalate. Click them during your practice scenario to build muscle memory.</span></li>
+          <li><span class="help-step-num">6</span><span>Stop the timer, fill in the <strong style="color:var(--text)">Wrap-Up Bar</strong> at the bottom with a disposition code, then hit <span class="help-kbd">Save &amp; Close</span>. This is After Call Work (ACW) — every second counts.</span></li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Sticky notes</div>
+        <p class="help-p">Use the <span class="help-kbd">✎ + NOTE</span> button (bottom right) to create floating notes during a call — great for jotting down order numbers, phonetic spellings, or things to double-check. Notes are draggable and persist between sessions. Each new note starts with a customer detail template.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Tips for practice</div>
+        <div class="help-tip"><strong>Less is more at first.</strong> In Settings, try turning off Account Status, Flags, and History. Practice the core loop: identity → case notes → wrap-up. Add panels back one by one each session.</div>
+        <div class="help-tip"><strong>Treat every field as real.</strong> Type realistic fake data — made-up names, plausible order numbers, actual issue descriptions. The more seriously you treat the simulation, the more transferable the skills.</div>
+        <div class="help-tip"><strong>You can reopen this guide</strong> any time from the <span class="help-kbd">? HELP</span> button in the Settings panel.</div>
+      </div>
+
+    </div>
+    <div class="help-footer">
+      <label class="help-dont-show">
+        <input type="checkbox" id="helpDontShow" onchange="saveHelpPref(this.checked)">
+        Don't show this again
+      </label>
+      <button class="help-close-btn" onclick="closeHelp()">Got it — let's go ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SETTINGS OVERLAY + PANEL
+     ============================================================ -->
+<div class="settings-overlay" id="sOverlay" onclick="closeSettings()"></div>
+
+<div class="settings-panel" id="sPanel">
+  <div class="settings-header">
+    <div class="settings-title">⚙ CRM Settings</div>
+    <button class="settings-close" onclick="closeSettings()">✕</button>
+  </div>
+
+  <!-- Master toggle -->
+  <div class="settings-section">
+    <div class="master-toggle-row">
+      <span class="master-toggle-label">⊞ Toggle All Panels &amp; Features</span>
+      <label class="toggle">
+        <input type="checkbox" id="togAll" checked onchange="toggleAll(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="padding-top:0;">
+      <span class="toggle-label" style="font-size:11px;color:var(--text-muted);font-style:italic;">Switches every panel and feature on or off at once</span>
+    </div>
+  </div>
+
+  <!-- Company / Theme -->
+  <div class="settings-section">
+    <div class="settings-section-title">Company / Theme</div>
+    <div class="radio-row">
+      <label class="radio-label"><input type="radio" name="co" value="generic"      checked onchange="setCompany(this.value)"><span>Generic Company</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="pbtech"             onchange="setCompany(this.value)"><span>PB Tech</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="jbhifi"             onchange="setCompany(this.value)"><span>JB Hi-Fi</span></label>
+      <label class="radio-label"><input type="radio" name="co" value="harveynorman"       onchange="setCompany(this.value)"><span>Harvey Norman</span></label>
+    </div>
+  </div>
+
+  <!-- Appearance -->
+  <div class="settings-section">
+    <div class="settings-section-title">Appearance</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Light Mode</span>
+      <label class="toggle"><input type="checkbox" id="togLight" onchange="toggleLight(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Compact Density</span>
+      <label class="toggle"><input type="checkbox" id="togCompact" onchange="toggleCompact(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- Accessibility -->
+  <div class="settings-section">
+    <div class="settings-section-title">Accessibility</div>
+
+    <div class="a11y-group-label">Font</div>
+    <div class="a11y-btn-row" id="fontBtnRow">
+      <button class="a11y-btn active" data-font="default"  onclick="setA11yFont('default')">Default</button>
+      <button class="a11y-btn"        data-font="system"   onclick="setA11yFont('system')">System UI</button>
+      <button class="a11y-btn"        data-font="legible"  onclick="setA11yFont('legible')">Lexend</button>
+      <button class="a11y-btn"        data-font="atkinson" onclick="setA11yFont('atkinson')">Hyperlegible</button>
+      <button class="a11y-btn"        data-font="mono"     onclick="setA11yFont('mono')">Mono</button>
+    </div>
+
+    <div class="a11y-group-label" style="margin-top:10px;">Color Contrast</div>
+    <div class="a11y-btn-row" id="contrastBtnRow">
+      <button class="a11y-btn active" data-contrast="normal" onclick="setA11yContrast('normal')">Normal</button>
+      <button class="a11y-btn"        data-contrast="high"   onclick="setA11yContrast('high')">High</button>
+      <button class="a11y-btn"        data-contrast="max"    onclick="setA11yContrast('max')">Max</button>
+    </div>
+
+    <div class="a11y-group-label" style="margin-top:10px;">Text Size</div>
+    <div class="a11y-btn-row" id="sizeBtnRow">
+      <button class="a11y-btn"        data-size="sm"  onclick="setA11ySize('sm')">S</button>
+      <button class="a11y-btn active" data-size="md"  onclick="setA11ySize('md')">M</button>
+      <button class="a11y-btn"        data-size="lg"  onclick="setA11ySize('lg')">L</button>
+      <button class="a11y-btn"        data-size="xl"  onclick="setA11ySize('xl')">XL</button>
+    </div>
+  </div>
+
+  <!-- Group: Left Column -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Panels — Left Column</div>
+      <label class="toggle" title="Toggle all left column panels">
+        <input type="checkbox" id="grpLeft" checked
+               onchange="toggleGroup('grpLeft', ['togCaller','togAcct','togFlags'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children">
+      <div class="toggle-row">
+        <span class="toggle-label">Caller Identity</span>
+        <label class="toggle">
+          <input type="checkbox" id="togCaller" checked
+                 onchange="toggleSec('sCaller',this.checked); syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Account Status</span>
+        <label class="toggle">
+          <input type="checkbox" id="togAcct" checked
+                 onchange="toggleSec('sAcct',this.checked); syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Customer Flags</span>
+        <label class="toggle">
+          <input type="checkbox" id="togFlags" checked
+                 onchange="toggleSec('sFlags',this.checked); syncGroupToggle('grpLeft',['togCaller','togAcct','togFlags'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group: Centre & Right -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Panels — Centre &amp; Right</div>
+      <label class="toggle" title="Toggle all centre and right panels">
+        <input type="checkbox" id="grpCentre" checked
+               onchange="toggleGroup('grpCentre', ['togCase','togActions','togHist','togWrapup'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children">
+      <div class="toggle-row">
+        <span class="toggle-label">Case / Ticket Area</span>
+        <label class="toggle">
+          <input type="checkbox" id="togCase" checked
+                 onchange="toggleSec('sCase',this.checked); syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Quick Actions</span>
+        <label class="toggle">
+          <input type="checkbox" id="togActions" checked
+                 onchange="toggleSec('sActions',this.checked); syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Interaction History</span>
+        <label class="toggle">
+          <input type="checkbox" id="togHist" checked
+                 onchange="toggleSec('sHistory',this.checked); syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Wrap-Up Bar</span>
+        <label class="toggle">
+          <input type="checkbox" id="togWrapup" checked
+                 onchange="toggleEl('wrapupBar',this.checked); syncGroupToggle('grpCentre',['togCase','togActions','togHist','togWrapup'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group: Features -->
+  <div class="settings-section">
+    <div class="grp-hdr">
+      <div class="settings-section-title">Features</div>
+      <label class="toggle" title="Toggle all features">
+        <input type="checkbox" id="grpFeatures" checked
+               onchange="toggleGroup('grpFeatures', ['togTimer','togSticky','togOutage'], this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="grp-children">
+      <div class="toggle-row">
+        <span class="toggle-label">Call Timer</span>
+        <label class="toggle">
+          <input type="checkbox" id="togTimer" checked
+                 onchange="toggleEl('callTimer',this.checked); syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Sticky Notes</span>
+        <label class="toggle">
+          <input type="checkbox" id="togSticky" checked
+                 onchange="toggleSticky(this.checked); syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Outage / Alert Banner</span>
+        <label class="toggle">
+          <input type="checkbox" id="togOutage" checked
+                 onchange="toggleEl('outageBanner',this.checked); syncGroupToggle('grpFeatures',['togTimer','togSticky','togOutage'])">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Management -->
+  <div class="settings-section">
+    <div class="settings-section-title">Data Management</div>
+    <button class="data-btn data-btn-normal" onclick="generateNewCase()">↻ New Case / Interaction ID</button>
+    <button class="data-btn data-btn-normal" onclick="clearForm()">⊘ Clear Current Interaction</button>
+    <button class="data-btn data-btn-danger" onclick="clearAll()">⚠ Wipe All Saved Data</button>
+  </div>
+
+  <!-- Help -->
+  <div class="settings-section">
+    <div class="settings-section-title">Help</div>
+    <button class="data-btn data-btn-normal" onclick="openHelp()">? Re-open Welcome Guide</button>
+  </div>
+</div>
+
+<!-- Settings side-tab trigger -->
+<button class="settings-btn" onclick="toggleSettings()">SETTINGS</button>
+
+<!-- ============================================================
+     TOP BAR
+     ============================================================ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="live-dot"></div>
+    <span id="coName">GenericCo</span>&nbsp;CRM
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-info">AGENT <span id="agentId">AGT-4821</span></div>
+  <div class="topbar-info">QUEUE <span id="queueName">GENERAL SUPPORT</span></div>
+  <div class="topbar-info"><span id="clockEl">--:--:--</span></div>
+  <div class="topbar-tabs">
+    <button class="company-tab active" data-co="generic"      onclick="setCoTab(this)">Generic</button>
+    <button class="company-tab"        data-co="pbtech"       onclick="setCoTab(this)">PB Tech</button>
+    <button class="company-tab"        data-co="jbhifi"       onclick="setCoTab(this)">JB Hi-Fi</button>
+    <button class="company-tab"        data-co="harveynorman" onclick="setCoTab(this)">Harvey Norman</button>
+  </div>
+  <div class="topbar-spacer"></div>
+  <!-- Call Timer -->
+  <div class="call-timer" id="callTimer">
+    <div class="timer-label">CALL TIME</div>
+    <div class="timer-display" id="timerDisp">00:00:00</div>
+    <button class="timer-btn timer-toggle-btn" id="tBtnToggle" onclick="tToggle()">▶ START</button>
+    <button class="timer-btn"                                   onclick="tReset()">↺ RESET</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     OUTAGE BANNER
+     ============================================================ -->
+<div class="outage-banner" id="outageBanner">
+  ⚠ System maintenance scheduled this weekend — notify customers if querying outage
+</div>
+
+<!-- ============================================================
+     CRM BODY
+     ============================================================ -->
+<div class="crm-body">
+
+  <!-- ===== LEFT PANEL ===== -->
+  <div class="panel" id="leftPanel">
+
+    <!-- Caller Identity -->
+    <div class="panel-sec" id="sCaller">
+      <div class="sec-hdr">
+        Caller Identity
+        <span class="int-id" id="intId">INT-00000</span>
+      </div>
+      <div class="sec-body">
+        <div class="f-row">
+          <div class="f-label">Full Name</div>
+          <input class="f-in" id="fName" placeholder="Customer full name..." data-s="fName">
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Account #</div>
+            <input class="f-in mono" id="fAcct" placeholder="ACC-..." data-s="fAcct">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Customer ID</div>
+            <input class="f-in mono" id="fCid" placeholder="CID-..." data-s="fCid">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Phone</div>
+          <input class="f-in" id="fPhone" placeholder="Phone number..." data-s="fPhone">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Email</div>
+          <input class="f-in" id="fEmail" placeholder="Email address..." data-s="fEmail">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Account Type</div>
+          <select class="f-sel" id="fType" data-s="fType">
+            <option value="">— Select —</option>
+            <option>Residential</option>
+            <option>Business</option>
+            <option>VIP / Premium</option>
+            <option>Staff / Employee</option>
+            <option>Trade / Wholesale</option>
+          </select>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Customer Since</div>
+            <input class="f-in" id="fSince" type="date" data-s="fSince">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Pref. Contact</div>
+            <select class="f-sel" id="fPref" data-s="fPref">
+              <option value="">—</option>
+              <option>Phone</option>
+              <option>Email</option>
+              <option>SMS</option>
+              <option>Live Chat</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Linked Accounts / Household</div>
+          <input class="f-in mono" id="fLinked" placeholder="e.g. ACC-1234, ACC-5678"
+                 data-s="fLinked" style="font-size:11px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Status -->
+    <div class="panel-sec" id="sAcct">
+      <div class="sec-hdr">Account Status</div>
+      <div class="sec-body">
+        <div class="f-row">
+          <div class="f-label">Standing</div>
+          <select class="f-sel" id="fStanding" data-s="fStanding" onchange="updStanding()">
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div style="margin:4px 0 8px;">
+          <span class="badge b-active" id="standBadge">Active</span>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Outstanding Balance</div>
+          <input class="f-in mono" id="fBal" placeholder="$0.00" data-s="fBal">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Next Payment Due</div>
+          <input class="f-in" id="fPayDue" type="date" data-s="fPayDue">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Active Products / Plan</div>
+          <input class="f-in" id="fPlan" placeholder="e.g. ExtendedCare Plus, 3-yr warranty" data-s="fPlan">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Recent Order / Invoice</div>
+          <input class="f-in mono" id="fLastOrd" placeholder="ORD- or INV-..."
+                 data-s="fLastOrd" style="font-size:11px;">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Recent Transaction Amt</div>
+          <input class="f-in mono" id="fLastAmt" placeholder="$0.00 · date" data-s="fLastAmt">
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Flags -->
+    <div class="panel-sec" id="sFlags">
+      <div class="sec-hdr">Customer Flags</div>
+      <div class="sec-body">
+        <div class="flag-item">
+          <input type="checkbox" id="flVuln" data-s="flVuln">
+          <div class="flag-dot" style="background:#ff9966"></div>
+          <label for="flVuln">Vulnerable Customer</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flDNC" data-s="flDNC">
+          <div class="flag-dot" style="background:var(--danger)"></div>
+          <label for="flDNC">Do Not Contact</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flFraud" data-s="flFraud">
+          <div class="flag-dot" style="background:var(--danger)"></div>
+          <label for="flFraud">Fraud Watch</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flDeceased" data-s="flDeceased">
+          <div class="flag-dot" style="background:var(--text-muted)"></div>
+          <label for="flDeceased">Account Holder Deceased</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flMediation" data-s="flMediation">
+          <div class="flag-dot" style="background:var(--warn)"></div>
+          <label for="flMediation">In Mediation / Legal</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flVIP" data-s="flVIP">
+          <div class="flag-dot" style="background:var(--accent)"></div>
+          <label for="flVIP">VIP Priority</label>
+        </div>
+        <div class="flag-item">
+          <input type="checkbox" id="flCallback" data-s="flCallback">
+          <div class="flag-dot" style="background:var(--success)"></div>
+          <label for="flCallback">Callback Requested</label>
+        </div>
+        <div class="f-row" style="margin-top:8px;">
+          <div class="f-label">Flag Notes</div>
+          <textarea class="f-ta" id="flNotes" placeholder="Additional flag detail..."
+                    style="min-height:44px;" data-s="flNotes"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left panel -->
+
+  <!-- ===== CENTRE PANEL ===== -->
+  <div class="center-panel">
+
+    <div class="panel-sec" id="sCase">
+      <div class="sec-hdr">
+        Case / Ticket
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge b-open" id="caseBadge">Open</span>
+          <span class="int-id" id="caseNum">CASE-00000</span>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Channel</div>
+            <select class="f-sel" id="cChannel" data-s="cChannel">
+              <option>Inbound Call</option>
+              <option>Outbound Call</option>
+              <option>Email</option>
+              <option>Live Chat</option>
+              <option>Walk-in / In-Store</option>
+              <option>Callback</option>
+              <option>Social Media</option>
+              <option>Web Form</option>
+            </select>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Case Status</div>
+            <select class="f-sel" id="cStatus" data-s="cStatus" onchange="updCase()">
+              <option value="open">Open</option>
+              <option value="pending">Pending</option>
+              <option value="escalated">Escalated</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Category</div>
+            <select class="f-sel" id="cCat" data-s="cCat">
+              <option value="">— Select —</option>
+              <option>Billing / Payment</option>
+              <option>Technical Support</option>
+              <option>Returns / Refunds</option>
+              <option>Order Status</option>
+              <option>Product Enquiry</option>
+              <option>Complaint</option>
+              <option>Warranty Claim</option>
+              <option>Delivery / Courier</option>
+              <option>Price Match</option>
+              <option>Account Management</option>
+              <option>Recall / Safety</option>
+              <option>General Enquiry</option>
+            </select>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Sub-Category</div>
+            <input class="f-in" id="cSubCat" placeholder="Specify further..." data-s="cSubCat">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Priority</div>
+          <div class="pri-row" id="priRow">
+            <button class="pri-btn low"       data-p="low"  onclick="setPri('low')">Low</button>
+            <button class="pri-btn med active" data-p="med"  onclick="setPri('med')">Medium</button>
+            <button class="pri-btn high"      data-p="high" onclick="setPri('high')">High</button>
+            <button class="pri-btn urg"       data-p="urg"  onclick="setPri('urg')">Urgent</button>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Order / Invoice Ref</div>
+            <input class="f-in mono" id="cOrderRef" placeholder="ORD- or INV-..."
+                   data-s="cOrderRef" style="font-size:11px;">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Product / SKU</div>
+            <input class="f-in" id="cSKU" placeholder="Product or SKU..." data-s="cSKU">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Case Notes (customer-facing)</div>
+          <textarea class="f-ta" id="cNotes"
+                    placeholder="Document the interaction in detail — what the customer reported, what was discussed, next steps..."
+                    style="min-height:90px;" data-s="cNotes"></textarea>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Resolution / Action Taken</div>
+          <textarea class="f-ta" id="cResolution"
+                    placeholder="What was done to resolve or progress the issue..." data-s="cResolution"></textarea>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Internal Notes (agent only)</div>
+            <textarea class="f-ta" id="cInternal"
+                      placeholder="Internal notes not visible to customer..."
+                      style="min-height:56px;" data-s="cInternal"></textarea>
+          </div>
+          <div class="f-row">
+            <div class="f-label">Follow-Up Task</div>
+            <textarea class="f-ta" id="cFollowup"
+                      placeholder="Describe any required follow-up..."
+                      style="min-height:56px;" data-s="cFollowup"></textarea>
+          </div>
+        </div>
+        <div class="f-grid2">
+          <div class="f-row">
+            <div class="f-label">Assigned To</div>
+            <input class="f-in" id="cAssigned" placeholder="Agent name or team..." data-s="cAssigned">
+          </div>
+          <div class="f-row">
+            <div class="f-label">Est. Resolution Date</div>
+            <input class="f-in" id="cResDate" type="date" data-s="cResDate">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Script / Compliance Notes</div>
+          <input class="f-in" id="cScript"
+                 placeholder="Mandatory disclosures or compliance reminders noted..." data-s="cScript">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /centre panel -->
+
+  <!-- ===== RIGHT PANEL ===== -->
+  <div class="panel">
+
+    <!-- Quick Actions -->
+    <div class="panel-sec" id="sActions">
+      <div class="sec-hdr">Quick Actions</div>
+      <div class="sec-body">
+        <button class="act-btn primary" onclick="toast('Call transferred to next available agent')"><span class="act-icon">📞</span>Transfer Call</button>
+        <button class="act-btn"         onclick="toast('Customer placed on hold')">              <span class="act-icon">⏸</span>Place on Hold</button>
+        <button class="act-btn"         onclick="toast('Conference call initiated')">             <span class="act-icon">👥</span>Conference</button>
+        <button class="act-btn"         onclick="toast('Callback scheduled for customer')">      <span class="act-icon">↩</span>Schedule Callback</button>
+        <button class="act-btn"         onclick="toast('Email sent to customer')">               <span class="act-icon">✉</span>Send Email</button>
+        <button class="act-btn"         onclick="toast('SMS sent to customer')">                 <span class="act-icon">💬</span>Send SMS</button>
+        <button class="act-btn"         onclick="toast('Knowledge base opened')">                <span class="act-icon">📚</span>Knowledge Base</button>
+        <button class="act-btn"         onclick="toast('Case escalated to Tier 2 — manager notified')"><span class="act-icon">⬆</span>Escalate Case</button>
+        <button class="act-btn"         onclick="toast('New linked case created')">              <span class="act-icon">➕</span>New Linked Case</button>
+        <button class="act-btn danger"  onclick="toast('Case flagged for quality review')">      <span class="act-icon">⚑</span>Flag for Review</button>
+        <button class="act-btn danger"  onclick="toast('Fraud alert raised — security notified')"><span class="act-icon">🔒</span>Raise Fraud Alert</button>
+      </div>
+    </div>
+
+    <!-- Interaction History -->
+    <div class="panel-sec" id="sHistory" style="flex:1;">
+      <div class="sec-hdr">Interaction History <span class="badge-pill">5</span></div>
+      <div class="sec-body">
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">14 Apr 2025 · 09:14 AM · 7m 22s</div>
+          <div class="hist-desc">Billing query — double charged for extended warranty</div>
+          <div class="hist-agent">AGT-3812 · Sarah T.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">EMAIL</span>
+            <span class="badge b-resolved" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">2 Apr 2025 · 03:41 PM</div>
+          <div class="hist-desc">Refund request for DOA item — approved</div>
+          <div class="hist-agent">AGT-4102 · Marcus H.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-pending" style="font-size:9px;padding:1px 5px;">Pending</span>
+          </div>
+          <div class="hist-date">28 Mar 2025 · 11:05 AM · 14m 8s</div>
+          <div class="hist-desc">Technical issue — laptop not booting after update</div>
+          <div class="hist-agent">AGT-4821 · You</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">LIVE CHAT</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Resolved</span>
+          </div>
+          <div class="hist-date">15 Mar 2025 · 02:33 PM · 22m</div>
+          <div class="hist-desc">Price match enquiry — competitor pricing</div>
+          <div class="hist-agent">BOT → AGT-3910 · Priya L.</div>
+        </div>
+        <div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="hist-type">INBOUND CALL</span>
+            <span class="badge b-closed" style="font-size:9px;padding:1px 5px;">Closed</span>
+          </div>
+          <div class="hist-date">1 Feb 2025 · 04:52 PM · 3m 45s</div>
+          <div class="hist-desc">Account verification check</div>
+          <div class="hist-agent">AGT-2244 · James F.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right panel -->
+
+  <!-- ============================================================
+       WRAP-UP BAR
+       ============================================================ -->
+  <div class="wrapup-bar" id="wrapupBar">
+    <span class="wu-label">Wrap-Up:</span>
+    <select class="wu-sel" id="wuCode" data-s="wuCode">
+      <option value="">— Disposition Code —</option>
+      <option>Resolved — First Contact</option>
+      <option>Resolved — Follow-Up Required</option>
+      <option>Escalated — Tier 2</option>
+      <option>Escalated — Manager</option>
+      <option>Callback Scheduled</option>
+      <option>Voicemail Left</option>
+      <option>Customer Abandoned</option>
+      <option>Wrong Number</option>
+      <option>No Fault Found</option>
+      <option>Referred to Store</option>
+      <option>Refund Processed</option>
+      <option>Warranty Lodged</option>
+      <option>Repeat Contact</option>
+    </select>
+    <input class="wu-sel" id="wuSurvey" data-s="wuSurvey" style="min-width:115px; background:var(--bg3); border:1px solid var(--border); color:var(--text); font-size:11px; padding:4px 7px; border-radius:2px; cursor:pointer;" list="wuSurveyList">
+    <datalist id="wuSurveyList">
+      <option value="Survey Consent">
+      <option value="Consented">
+      <option value="Declined">
+      <option value="No Response">
+    </datalist>
+    <!-- ACW Timer -->
+    <div class="acw-block" id="acwBlock">
+      <span class="wu-label">ACW</span>
+      <div class="acw-display" id="acwDisp">00:00</div>
+      <button class="timer-btn acw-toggle-btn" id="acwBtnToggle" onclick="acwToggle()">▶</button>
+      <button class="timer-btn" onclick="acwReset()">↺</button>
+    </div>
+    <div style="flex:1;"></div>
+    <button class="wu-btn"     onclick="saveClose()">✓ Save &amp; Close</button>
+    <button class="wu-btn sec" onclick="saveDraft()">Save Draft</button>
+    <button class="wu-btn sec" onclick="newInteraction()">⊕ New</button>
+  </div>
+
+</div><!-- /crm-body -->
+
+<!-- ============================================================
+     STICKY NOTES LAYER + FAB
+     ============================================================ -->
+<div class="sticky-wrap" id="stickyWrap"></div>
+<button class="add-note-fab" id="noteFab" onclick="addNote()">✎ + NOTE</button>
+
+<!-- Toast container -->
+<div id="toastWrap"></div>
+
+<!-- ============================================================
+     SCRIPTS  (loaded at end of body so DOM is ready)
+     ============================================================ -->
+<script src="crm-simulator.js"></script>
+
+</body>
+</html>
