@@ -461,28 +461,35 @@ function updatePresetList() {
   if (!sel) return;
   sel.innerHTML = '<option value="">— Load example customer —</option>';
 
-  // Training scenarios always pinned to the top
+  // Custom user-created scenarios shown first after training
+  const custom  = getCustomScenarios();
   const training = CUSTOMERS.filter(c => c.id.startsWith('t'));
   const rest     = CUSTOMERS.filter(c => !c.id.startsWith('t'));
 
   training.forEach(c => {
     const o = document.createElement('option');
-    o.value = c.id;
-    o.textContent = c.label;
+    o.value = c.id; o.textContent = c.label;
     sel.appendChild(o);
   });
 
-  if (training.length && rest.length) {
+  if (custom.length) {
     const divider = document.createElement('option');
-    divider.disabled = true;
-    divider.textContent = '────────────────────────';
+    divider.disabled = true; divider.textContent = '── My Scenarios ──────────────';
     sel.appendChild(divider);
+    custom.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.label;
+      sel.appendChild(o);
+    });
   }
+
+  const divider2 = document.createElement('option');
+  divider2.disabled = true; divider2.textContent = '── Example Customers ─────────';
+  sel.appendChild(divider2);
 
   rest.forEach(c => {
     const o = document.createElement('option');
-    o.value = c.id;
-    o.textContent = c.label;
+    o.value = c.id; o.textContent = c.label;
     sel.appendChild(o);
   });
 }
@@ -490,7 +497,13 @@ function updatePresetList() {
 function loadPreset() {
   const id = document.getElementById('presetSel').value;
   if (!id) { toast('⚠ Select an example customer first'); return; }
-  const c = CUSTOMERS.find(x => x.id === id);
+
+  // Check built-in CUSTOMERS first, then custom saved scenarios
+  let c = CUSTOMERS.find(x => x.id === id);
+  if (!c) {
+    const custom = getCustomScenarios();
+    c = custom.find(x => x.id === id);
+  }
   if (!c) return;
 
   // ── Left panel: Caller Identity ──
@@ -1059,6 +1072,318 @@ function loadA11y() {
   setA11yFont(font);
   setA11yContrast(contrast);
   setA11ySize(size);
+}
+
+/* ============================================================
+   HOLD TIMER
+   ============================================================ */
+let holdSecs    = 0;
+let holdRunning = false;
+let holdInt     = null;
+
+function holdToggle() {
+  holdRunning ? _holdStop() : _holdStart();
+}
+
+function _holdStart() {
+  holdRunning = true;
+  holdSecs = 0;
+  holdRenderDisp();
+  document.getElementById('holdBanner').classList.add('active');
+  document.getElementById('holdBtnLabel').textContent = 'Resume Call';
+  holdInt = setInterval(() => { holdSecs++; holdRenderDisp(); }, 1000);
+  toast('⏸ Customer placed on hold');
+}
+
+function _holdStop() {
+  holdRunning = false;
+  clearInterval(holdInt);
+  document.getElementById('holdBanner').classList.remove('active');
+  document.getElementById('holdBtnLabel').textContent = 'Place on Hold';
+  toast('▶ Call resumed — hold time: ' + fmtHoldTime(holdSecs));
+  holdSecs = 0;
+  holdRenderDisp();
+}
+
+function holdRenderDisp() {
+  const m = String(Math.floor(holdSecs / 60)).padStart(2, '0');
+  const s = String(holdSecs % 60).padStart(2, '0');
+  document.getElementById('holdTimerDisp').textContent = `${m}:${s}`;
+}
+
+function fmtHoldTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+/* ============================================================
+   PHONETIC ALPHABET
+   ============================================================ */
+const PHONETIC = [
+  ['A','Alpha'],   ['B','Bravo'],   ['C','Charlie'],
+  ['D','Delta'],   ['E','Echo'],    ['F','Foxtrot'],
+  ['G','Golf'],    ['H','Hotel'],   ['I','India'],
+  ['J','Juliet'],  ['K','Kilo'],    ['L','Lima'],
+  ['M','Mike'],    ['N','November'],['O','Oscar'],
+  ['P','Papa'],    ['Q','Quebec'],  ['R','Romeo'],
+  ['S','Sierra'],  ['T','Tango'],   ['U','Uniform'],
+  ['V','Victor'],  ['W','Whiskey'], ['X','X-ray'],
+  ['Y','Yankee'],  ['Z','Zulu']
+];
+
+function buildPhoneticGrid() {
+  const grid = document.getElementById('phoneticGrid');
+  if (!grid || grid.children.length > 0) return;
+  PHONETIC.forEach(([letter, word]) => {
+    const item = document.createElement('div');
+    item.className = 'phonetic-item';
+    item.innerHTML = `<span class="phonetic-letter">${letter}</span><span class="phonetic-word">${word}</span>`;
+    grid.appendChild(item);
+  });
+}
+
+function togglePhonetic() {
+  const body = document.getElementById('phoneticBody');
+  const icon = document.getElementById('phoneticToggleIcon');
+  const open = body.style.display === 'none' || body.style.display === '';
+  body.style.display = open ? 'block' : 'none';
+  icon.textContent = open ? '▼ HIDE' : '▶ SHOW';
+  if (open) buildPhoneticGrid();
+}
+
+/* ============================================================
+   COMMS MODALS — EMAIL / SMS / TEAMS
+   ============================================================ */
+function openComms(type) {
+  // Pre-fill customer details from the current interaction
+  const name  = document.getElementById('fName')?.value  || '';
+  const email = document.getElementById('fEmail')?.value || '';
+  const phone = document.getElementById('fPhone')?.value || '';
+  const caseN = document.getElementById('caseNum')?.textContent || '';
+  const co    = CO[curCo] || CO.generic;
+
+  document.getElementById('commsOverlay').classList.add('open');
+
+  if (type === 'email') {
+    document.getElementById('emailTo').value      = email;
+    document.getElementById('emailFrom').value    = `support@${co.name.toLowerCase().replace(/\s/g,'')}.co.nz`;
+    document.getElementById('emailRef').value     = caseN;
+    document.getElementById('emailSubject').value = caseN ? `Re: Your enquiry — ${caseN}` : '';
+    document.getElementById('emailStatus').textContent = '';
+    const greeting = name ? `Dear ${name.split(' ')[0]},` : 'Dear Customer,';
+    document.getElementById('emailBody').value = `${greeting}\n\nThank you for contacting ${co.name} today.\n\n\n\nKind regards,\n[Your Name]\n${co.name} Customer Service`;
+    document.getElementById('commsEmail').classList.add('open');
+
+  } else if (type === 'sms') {
+    document.getElementById('smsTo').value  = phone;
+    document.getElementById('smsBody').value = '';
+    document.getElementById('smsStatus').textContent = '';
+    document.getElementById('smsCharCount').textContent = '0 / 160 characters';
+    document.getElementById('commsSms').classList.add('open');
+    document.getElementById('smsBody').addEventListener('input', updateSmsCount);
+
+  } else if (type === 'teams') {
+    document.getElementById('teamsTo').value   = '';
+    document.getElementById('teamsBody').value = caseN ? `Re: ${caseN} — cx: ${name || '[name]'}, acct: ${document.getElementById('fAcct')?.value || '[acct]'}. ` : '';
+    document.getElementById('teamsStatus').textContent = '';
+    document.getElementById('commsTeams').classList.add('open');
+  }
+}
+
+function updateSmsCount() {
+  const ta  = document.getElementById('smsBody');
+  const cnt = document.getElementById('smsCharCount');
+  const len = ta.value.length;
+  cnt.textContent = `${len} / 160 characters`;
+  cnt.className = 'sms-char-count' + (len > 160 ? ' over' : len > 140 ? ' warn' : '');
+}
+
+function closeComms() {
+  document.getElementById('commsOverlay').classList.remove('open');
+  document.getElementById('commsEmail').classList.remove('open');
+  document.getElementById('commsSms').classList.remove('open');
+  document.getElementById('commsTeams').classList.remove('open');
+}
+
+function sendComms(type) {
+  const labels = { email: 'Email sent to customer ✓', sms: 'SMS sent to customer ✓', teams: 'Teams message sent ✓' };
+  const statusIds = { email: 'emailStatus', sms: 'smsStatus', teams: 'teamsStatus' };
+  document.getElementById(statusIds[type]).textContent = '✓ Sent';
+  toast(labels[type]);
+  setTimeout(closeComms, 900);
+}
+
+/* ============================================================
+   SCENARIO CREATOR
+   ============================================================ */
+function openScenarioCreator() {
+  closeSettings();
+  renderScenarioList();
+  document.getElementById('scenarioOverlay').classList.add('open');
+  document.getElementById('scenarioModal').classList.add('open');
+}
+
+function closeScenarioCreator() {
+  document.getElementById('scenarioOverlay').classList.remove('open');
+  document.getElementById('scenarioModal').classList.remove('open');
+  clearScenarioForm();
+}
+
+function getCustomScenarios() {
+  try { return JSON.parse(ls('crm_custom_scenarios') || '[]'); } catch { return []; }
+}
+
+function saveCustomScenarios(arr) {
+  lset('crm_custom_scenarios', JSON.stringify(arr));
+}
+
+function renderScenarioList() {
+  const list  = document.getElementById('scSavedList');
+  const count = document.getElementById('scCount');
+  const saved = getCustomScenarios();
+  count.textContent = saved.length;
+
+  if (!saved.length) {
+    list.innerHTML = '<div class="sc-empty">No custom scenarios yet. Create one below.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  saved.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'sc-saved-item';
+    row.innerHTML = `
+      <span class="sc-saved-name" title="${s.label}">${s.label}</span>
+      <button class="sc-saved-btn load" onclick="loadCustomScenario(${i})">Load</button>
+      <button class="sc-saved-btn edit" onclick="editCustomScenario(${i})">Edit</button>
+      <button class="sc-saved-btn del"  onclick="deleteCustomScenario(${i})">✕</button>`;
+    list.appendChild(row);
+  });
+
+  // Refresh the preset dropdown to include newly saved scenarios
+  updatePresetList();
+}
+
+function saveScenario() {
+  const label = document.getElementById('scLabel').value.trim();
+  const name  = document.getElementById('scName').value.trim();
+  const notes = document.getElementById('scNotes').value.trim();
+  if (!label || !name || !notes) { toast('⚠ Label, Customer Name, and Case Notes are required'); return; }
+
+  const scenario = {
+    id:       'c' + Date.now(),
+    label:    '⭐ ' + label,
+    name,
+    acct:     document.getElementById('scAcct').value.trim()  || 'ACC-CSTM',
+    cid:      'CID-CSTM',
+    phone:    document.getElementById('scPhone').value.trim(),
+    email:    document.getElementById('scEmail').value.trim(),
+    type:     document.getElementById('scType').value,
+    since:    '',
+    pref:     'Phone',
+    linked:   '',
+    standing: document.getElementById('scStanding').value,
+    balance:  '$0.00', payDue: '', plan: '', lastOrd: '', lastAmt: '',
+    flags:    [
+      document.getElementById('scFlVuln').checked     ? 'flVuln'     : null,
+      document.getElementById('scFlDNC').checked      ? 'flDNC'      : null,
+      document.getElementById('scFlFraud').checked    ? 'flFraud'    : null,
+      document.getElementById('scFlVIP').checked      ? 'flVIP'      : null,
+      document.getElementById('scFlMediation').checked? 'flMediation': null,
+      document.getElementById('scFlCallback').checked ? 'flCallback' : null,
+    ].filter(Boolean),
+    flagNotes: '',
+    scenario: {
+      channel: 'Inbound Call',
+      cat:     document.getElementById('scCat').value,
+      pri:     document.getElementById('scPri').value,
+      notes
+    }
+  };
+
+  const editId = document.getElementById('scEditId').value;
+  const saved  = getCustomScenarios();
+  if (editId) {
+    const idx = saved.findIndex(s => s.id === editId);
+    if (idx >= 0) { scenario.id = editId; saved[idx] = scenario; }
+    else saved.push(scenario);
+  } else {
+    saved.push(scenario);
+  }
+
+  saveCustomScenarios(saved);
+  renderScenarioList();
+  clearScenarioForm();
+  toast('✓ Scenario saved: ' + label);
+}
+
+function loadCustomScenario(idx) {
+  const saved = getCustomScenarios();
+  const c = saved[idx];
+  if (!c) return;
+  closeScenarioCreator();
+  // Merge into CUSTOMERS-style load
+  const fakeId = c.id;
+  // Temporarily inject into CUSTOMERS array for loadPreset reuse
+  const temp = { ...c };
+  CUSTOMERS.push(temp);
+  document.getElementById('presetSel').value = fakeId;
+  loadPreset();
+  // Remove temp entry
+  const ti = CUSTOMERS.findIndex(x => x.id === fakeId);
+  if (ti >= 0) CUSTOMERS.splice(ti, 1);
+  document.getElementById('presetSel').value = '';
+}
+
+function editCustomScenario(idx) {
+  const saved = getCustomScenarios();
+  const s = saved[idx];
+  if (!s) return;
+
+  document.getElementById('scFormTitle').textContent = 'Edit Scenario';
+  document.getElementById('scEditId').value  = s.id;
+  document.getElementById('scLabel').value   = s.label.replace(/^⭐\s*/,'');
+  document.getElementById('scName').value    = s.name;
+  document.getElementById('scAcct').value    = s.acct;
+  document.getElementById('scPhone').value   = s.phone;
+  document.getElementById('scEmail').value   = s.email;
+  document.getElementById('scType').value    = s.type;
+  document.getElementById('scStanding').value= s.standing;
+  document.getElementById('scCat').value     = s.scenario?.cat || '';
+  document.getElementById('scPri').value     = s.scenario?.pri || 'med';
+  document.getElementById('scNotes').value   = s.scenario?.notes || '';
+  document.getElementById('scFlVuln').checked     = s.flags.includes('flVuln');
+  document.getElementById('scFlDNC').checked      = s.flags.includes('flDNC');
+  document.getElementById('scFlFraud').checked    = s.flags.includes('flFraud');
+  document.getElementById('scFlVIP').checked      = s.flags.includes('flVIP');
+  document.getElementById('scFlMediation').checked= s.flags.includes('flMediation');
+  document.getElementById('scFlCallback').checked = s.flags.includes('flCallback');
+
+  // Scroll form into view
+  document.getElementById('scNotes').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function deleteCustomScenario(idx) {
+  if (!confirm('Delete this scenario?')) return;
+  const saved = getCustomScenarios();
+  saved.splice(idx, 1);
+  saveCustomScenarios(saved);
+  renderScenarioList();
+  toast('Scenario deleted');
+}
+
+function clearScenarioForm() {
+  ['scLabel','scName','scAcct','scPhone','scEmail','scNotes','scEditId']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['scType','scStanding','scCat'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.selectedIndex = 0;
+  });
+  const pri = document.getElementById('scPri');
+  if (pri) pri.value = 'med';
+  ['scFlVuln','scFlDNC','scFlFraud','scFlVIP','scFlMediation','scFlCallback']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+  document.getElementById('scFormTitle').textContent = 'New Scenario';
 }
 
 /* ============================================================

@@ -272,6 +272,7 @@
   <!-- Data Management -->
   <div class="settings-section">
     <div class="settings-section-title">Data Management</div>
+    <button class="data-btn data-btn-normal" onclick="openScenarioCreator()">✎ Scenario Creator</button>
     <button class="data-btn data-btn-normal" onclick="generateNewCase()">↻ New Case / Interaction ID</button>
     <button class="data-btn data-btn-normal" onclick="clearForm()">⊘ Clear Current Interaction</button>
     <button class="data-btn data-btn-danger" onclick="clearAll()">⚠ Wipe All Saved Data</button>
@@ -627,16 +628,28 @@
       <div class="sec-hdr">Quick Actions</div>
       <div class="sec-body">
         <button class="act-btn primary" onclick="toast('Call transferred to next available agent')"><span class="act-icon">📞</span>Transfer Call</button>
-        <button class="act-btn"         onclick="toast('Customer placed on hold')">              <span class="act-icon">⏸</span>Place on Hold</button>
+        <button class="act-btn"         onclick="holdToggle()">              <span class="act-icon">⏸</span><span id="holdBtnLabel">Place on Hold</span></button>
         <button class="act-btn"         onclick="toast('Conference call initiated')">             <span class="act-icon">👥</span>Conference</button>
         <button class="act-btn"         onclick="toast('Callback scheduled for customer')">      <span class="act-icon">↩</span>Schedule Callback</button>
-        <button class="act-btn"         onclick="toast('Email sent to customer')">               <span class="act-icon">✉</span>Send Email</button>
-        <button class="act-btn"         onclick="toast('SMS sent to customer')">                 <span class="act-icon">💬</span>Send SMS</button>
+        <button class="act-btn"         onclick="openComms('email')">                            <span class="act-icon">✉</span>Send Email</button>
+        <button class="act-btn"         onclick="openComms('sms')">                              <span class="act-icon">💬</span>Send SMS</button>
+        <button class="act-btn"         onclick="openComms('teams')">                            <span class="act-icon">🟣</span>Teams Message</button>
         <button class="act-btn"         onclick="toast('Knowledge base opened')">                <span class="act-icon">📚</span>Knowledge Base</button>
         <button class="act-btn"         onclick="toast('Case escalated to Tier 2 — manager notified')"><span class="act-icon">⬆</span>Escalate Case</button>
         <button class="act-btn"         onclick="toast('New linked case created')">              <span class="act-icon">➕</span>New Linked Case</button>
         <button class="act-btn danger"  onclick="toast('Case flagged for quality review')">      <span class="act-icon">⚑</span>Flag for Review</button>
         <button class="act-btn danger"  onclick="toast('Fraud alert raised — security notified')"><span class="act-icon">🔒</span>Raise Fraud Alert</button>
+      </div>
+    </div>
+
+    <!-- Phonetic Alphabet -->
+    <div class="panel-sec" id="sPhonetic">
+      <div class="sec-hdr" onclick="togglePhonetic()" style="cursor:pointer;">
+        Phonetic Alphabet
+        <span id="phoneticToggleIcon" style="font-size:10px;color:var(--accent);">▶ SHOW</span>
+      </div>
+      <div class="sec-body" id="phoneticBody" style="display:none;">
+        <div class="phonetic-grid" id="phoneticGrid"></div>
       </div>
     </div>
 
@@ -745,6 +758,279 @@
 
 <!-- Toast container -->
 <div id="toastWrap"></div>
+
+<!-- ============================================================
+     HOLD BANNER
+     ============================================================ -->
+<div class="hold-banner" id="holdBanner">
+  <div class="hold-dot"></div>
+  <span class="hold-label">CUSTOMER ON HOLD</span>
+  <div class="hold-music">♫ hold music playing</div>
+  <div class="hold-timer-display" id="holdTimerDisp">00:00</div>
+  <button class="hold-resume-btn" onclick="holdToggle()">▶ Resume</button>
+</div>
+
+<!-- ============================================================
+     COMMS MODALS — EMAIL / SMS / TEAMS
+     ============================================================ -->
+<div class="modal-overlay" id="commsOverlay" onclick="closeComms()"></div>
+
+<!-- Email -->
+<div class="comms-modal" id="commsEmail">
+  <div class="comms-header email-header">
+    <div class="comms-header-left">
+      <span class="comms-app-icon">✉</span>
+      <span class="comms-app-name">Email — New Message</span>
+    </div>
+    <button class="comms-close" onclick="closeComms()">✕</button>
+  </div>
+  <div class="comms-body">
+    <div class="comms-field-row">
+      <span class="comms-field-label">To:</span>
+      <input class="comms-field-in" id="emailTo" placeholder="customer@email.com">
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">From:</span>
+      <input class="comms-field-in" id="emailFrom" placeholder="support@company.co.nz" readonly>
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">Subject:</span>
+      <input class="comms-field-in" id="emailSubject" placeholder="Re: Your recent enquiry">
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">Ref:</span>
+      <input class="comms-field-in" id="emailRef" placeholder="Case / order reference..." readonly>
+    </div>
+    <textarea class="comms-body-ta" id="emailBody" placeholder="Dear [Customer Name],
+
+Thank you for contacting us today.
+
+[Write your message here]
+
+Kind regards,
+[Your Name]
+Customer Service Team"></textarea>
+    <div class="comms-footer">
+      <div class="comms-status" id="emailStatus"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="comms-btn sec" onclick="closeComms()">Discard</button>
+        <button class="comms-btn primary" onclick="sendComms('email')">Send Email ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SMS -->
+<div class="comms-modal" id="commsSms">
+  <div class="comms-header sms-header">
+    <div class="comms-header-left">
+      <span class="comms-app-icon">💬</span>
+      <span class="comms-app-name">SMS — New Message</span>
+    </div>
+    <button class="comms-close" onclick="closeComms()">✕</button>
+  </div>
+  <div class="comms-body">
+    <div class="comms-field-row">
+      <span class="comms-field-label">To:</span>
+      <input class="comms-field-in" id="smsTo" placeholder="Customer phone number">
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">From:</span>
+      <input class="comms-field-in" id="smsFrom" value="0800 SUPPORT" readonly>
+    </div>
+    <textarea class="comms-body-ta" id="smsBody" placeholder="Hi [Name], this is [Agent] from [Company]. [Your message]. Reply STOP to opt out." style="min-height:120px;"></textarea>
+    <div class="sms-char-row">
+      <span class="sms-char-count" id="smsCharCount">0 / 160 characters</span>
+      <span class="sms-char-note">Messages over 160 characters send as multiple SMS</span>
+    </div>
+    <div class="comms-footer">
+      <div class="comms-status" id="smsStatus"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="comms-btn sec" onclick="closeComms()">Discard</button>
+        <button class="comms-btn primary" onclick="sendComms('sms')">Send SMS ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Teams -->
+<div class="comms-modal" id="commsTeams">
+  <div class="comms-header teams-header">
+    <div class="comms-header-left">
+      <span class="comms-app-icon">🟣</span>
+      <span class="comms-app-name">Microsoft Teams — New Message</span>
+    </div>
+    <button class="comms-close" onclick="closeComms()">✕</button>
+  </div>
+  <div class="comms-body">
+    <div class="comms-field-row">
+      <span class="comms-field-label">To:</span>
+      <input class="comms-field-in" id="teamsTo" placeholder="Team member or channel name">
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">Channel:</span>
+      <select class="comms-field-in" id="teamsChannel">
+        <option>General</option>
+        <option>Escalations</option>
+        <option>Technical Support</option>
+        <option>Supervisor Queue</option>
+        <option>Fraud & Security</option>
+        <option>After Hours</option>
+      </select>
+    </div>
+    <div class="comms-field-row">
+      <span class="comms-field-label">Priority:</span>
+      <select class="comms-field-in" id="teamsPriority">
+        <option>Standard</option>
+        <option>Important !</option>
+        <option>Urgent !!</option>
+      </select>
+    </div>
+    <textarea class="comms-body-ta" id="teamsBody" placeholder="@name — cx on the line re: [issue]. Case [CASE-#]. Req [action]. Cx acct: [ACC-#]. CX on POH." style="min-height:120px;"></textarea>
+    <div class="teams-hint">💡 Tip: Use abbreviations when messaging during a live call — CX (customer), POH (on hold), REQ (request), ACC (account)</div>
+    <div class="comms-footer">
+      <div class="comms-status" id="teamsStatus"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="comms-btn sec" onclick="closeComms()">Discard</button>
+        <button class="comms-btn primary" onclick="sendComms('teams')">Send Message ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCENARIO CREATOR MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="scenarioOverlay" onclick="closeScenarioCreator()"></div>
+<div class="scenario-modal" id="scenarioModal">
+  <div class="scenario-modal-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="color:var(--accent);font-size:1rem;">✎</span>
+      <span class="settings-title">Scenario Creator</span>
+    </div>
+    <button class="settings-close" onclick="closeScenarioCreator()">✕</button>
+  </div>
+  <div class="scenario-modal-body">
+
+    <!-- Saved scenarios list -->
+    <div class="sc-section">
+      <div class="sc-section-title">Saved Custom Scenarios <span class="badge-pill" id="scCount">0</span></div>
+      <div id="scSavedList" class="sc-saved-list">
+        <div class="sc-empty">No custom scenarios yet. Create one below.</div>
+      </div>
+    </div>
+
+    <div class="sc-divider"></div>
+
+    <!-- Creator form -->
+    <div class="sc-section">
+      <div class="sc-section-title" id="scFormTitle">New Scenario</div>
+      <input type="hidden" id="scEditId">
+
+      <div class="f-row">
+        <div class="f-label">Scenario Label (shown in dropdown) *</div>
+        <input class="f-in" id="scLabel" placeholder="e.g. Angry customer — billing dispute">
+      </div>
+
+      <div class="f-grid2">
+        <div class="f-row">
+          <div class="f-label">Customer Name *</div>
+          <input class="f-in" id="scName" placeholder="Full name">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Account #</div>
+          <input class="f-in mono" id="scAcct" placeholder="ACC-...">
+        </div>
+      </div>
+
+      <div class="f-grid2">
+        <div class="f-row">
+          <div class="f-label">Phone</div>
+          <input class="f-in" id="scPhone" placeholder="Phone number">
+        </div>
+        <div class="f-row">
+          <div class="f-label">Email</div>
+          <input class="f-in" id="scEmail" placeholder="Email address">
+        </div>
+      </div>
+
+      <div class="f-grid2">
+        <div class="f-row">
+          <div class="f-label">Account Type</div>
+          <select class="f-sel" id="scType">
+            <option value="">— Select —</option>
+            <option>Residential</option>
+            <option>Business</option>
+            <option>VIP / Premium</option>
+            <option>Staff / Employee</option>
+            <option>Trade / Wholesale</option>
+          </select>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Account Standing</div>
+          <select class="f-sel" id="scStanding">
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="f-grid2">
+        <div class="f-row">
+          <div class="f-label">Case Category</div>
+          <select class="f-sel" id="scCat">
+            <option value="">— Select —</option>
+            <option>Billing / Payment</option>
+            <option>Technical Support</option>
+            <option>Returns / Refunds</option>
+            <option>Order Status</option>
+            <option>Product Enquiry</option>
+            <option>Complaint</option>
+            <option>Warranty Claim</option>
+            <option>Delivery / Courier</option>
+            <option>Price Match</option>
+            <option>Account Management</option>
+            <option>Recall / Safety</option>
+            <option>General Enquiry</option>
+          </select>
+        </div>
+        <div class="f-row">
+          <div class="f-label">Priority</div>
+          <select class="f-sel" id="scPri">
+            <option value="low">Low</option>
+            <option value="med" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="urg">Urgent</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="f-row">
+        <div class="f-label">Customer Flags</div>
+        <div class="sc-flag-row">
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlVuln"> Vulnerable</label>
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlDNC"> DNC</label>
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlFraud"> Fraud</label>
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlVIP"> VIP</label>
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlMediation"> Mediation</label>
+          <label class="sc-flag-cb"><input type="checkbox" id="scFlCallback"> Callback</label>
+        </div>
+      </div>
+
+      <div class="f-row">
+        <div class="f-label">Scenario / Case Notes * (this appears in the Case Notes field)</div>
+        <textarea class="f-ta" id="scNotes" placeholder="Describe the situation the agent will face — what has the customer called about, what information do they need, what is the expected outcome..." style="min-height:110px;"></textarea>
+      </div>
+
+      <div class="sc-form-footer">
+        <button class="comms-btn sec" onclick="clearScenarioForm()">Clear</button>
+        <button class="comms-btn primary" onclick="saveScenario()">✓ Save Scenario</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================
      SCRIPTS  (loaded at end of body so DOM is ready)

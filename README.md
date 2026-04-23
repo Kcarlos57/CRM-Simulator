@@ -47,9 +47,11 @@ Follow this loop to simulate a real contact centre interaction from start to fin
 8. **Fill in the Wrap-Up Bar** at the bottom: pick a disposition code and survey consent — the ACW timer starts automatically when you click Save & Close
 9. **Save & Close** the interaction
 
-### Example Customer Scenarios
+### Scenario Creator
 
-The **▤ SCENARIO** dropdown at the top of the Caller Identity panel contains 22 pre-built scenarios. Select one and click **Load ↓** to instantly populate all customer fields, account status, flags, and case notes.
+Open the Scenario Creator from **Settings → Data Management → ✎ Scenario Creator**. This lets you build and save your own custom practice scenarios that appear in the **▤ SCENARIO** dropdown alongside the built-in examples.
+
+The creator form lets you set: scenario label, customer name and account details, phone, email, account type, account standing, customer flags, case category, priority, and a full scenario briefing for the case notes field. Saved scenarios appear under a **"My Scenarios"** group in the dropdown with a ⭐ prefix, and can be loaded, edited, or deleted at any time. All custom scenarios persist to `localStorage`.
 
 The list is ordered with the two structured training scenarios pinned to the top, followed by all 20 example customers:
 
@@ -72,6 +74,22 @@ Click the **SETTINGS** tab on the left edge of the screen to open the settings p
 - Generate a new Case/Interaction ID
 - Clear the current interaction or wipe all saved data
 
+### Communication Tools
+
+Three Quick Action buttons now open dedicated compose panels:
+
+- **Send Email** — opens a modal pre-filled with the customer's email address, a company From address, the current case number as a reference, and a greeting using the customer's first name. Write your message and click Send.
+- **Send SMS** — opens a modal pre-filled with the customer's phone number. Includes a live character counter that turns amber at 140 characters and red past 160, and notes when a message will split into multiple SMS.
+- **Teams Message** — opens a Microsoft Teams-style compose panel with a channel selector (General, Escalations, Technical Support, Supervisor Queue, Fraud & Security, After Hours), a priority selector, and a starter message pre-filled with the case number, customer name, and account number. Includes a tip strip reminding you to use contact centre abbreviations (CX, POH, REQ) when messaging during a live call.
+
+### Hold Timer
+
+Clicking **Place on Hold** starts a compact amber popup in the top-right corner showing a live `MM:SS` count-up timer. The button label changes to **Resume Call**. Clicking it again dismisses the popup and fires a toast showing the total hold time (e.g. `Call resumed — hold time: 1m 43s`).
+
+### Phonetic Alphabet
+
+A collapsible **Phonetic Alphabet** panel sits in the right column below Quick Actions. Click the header to expand or collapse it. The full NATO alphabet (Alpha–Zulu) is displayed in a two-column grid for quick reference during calls when spelling out account numbers or names.
+
 ### Sticky Notes
 
 Click **✎ + NOTE** (bottom right) to create a floating note. Notes are draggable, colour-coded, and persist between sessions. Each new note pre-fills with a customer detail template. Use them to jot down order numbers, phonetic spellings, or anything you need during the call.
@@ -88,13 +106,37 @@ Click **✎ + NOTE** (bottom right) to create a floating note. Notes are draggab
 
 ### Example Customer Scenarios
 - **▤ SCENARIO** bar at the top of the Caller Identity panel
-- 22 pre-built entries in a flat, ordered list — no company grouping
+- 22 pre-built entries in a flat, ordered list
 - **2 structured training scenarios** pinned to the top:
   - *Scenario 1:* Escalate a complaint to a supervisor — practise contact centre abbreviations and terminology while the customer is on hold
   - *Scenario 2:* Resolve a product specification complaint — practise checking specs, running diagnostics, and applying the Consumer Guarantees Act
-- **20 example customers** spread across all four company themes, covering: billing queries, warranty claims, DOA returns, escalations, VIP accounts, fraud watch, vulnerable customers, deceased accounts, in-mediation cases, repeat complaints, and more
+- **20 example customers** covering billing queries, warranty claims, DOA returns, escalations, VIP accounts, fraud watch, vulnerable customers, deceased accounts, in-mediation cases, repeat complaints, and more
 - Loading a scenario fills all Caller Identity fields, Account Status fields, flag checkboxes, and seeds the Case Notes with a detailed briefing
 - All loaded data is immediately saved to localStorage via Save Draft
+
+### Scenario Creator
+- Accessible from **Settings → Data Management → ✎ Scenario Creator**
+- Create custom practice scenarios with: label, customer details, account type, standing, flags, case category, priority, and scenario briefing
+- Saved scenarios appear in the **▤ SCENARIO** dropdown under a **"My Scenarios"** group with a ⭐ prefix
+- Full **Load / Edit / Delete** controls for each saved scenario
+- All custom scenarios persist to `localStorage`
+
+### Hold Timer
+- Clicking **Place on Hold** starts a compact amber popup in the top-right corner (does not disrupt the layout)
+- Live `MM:SS` count-up timer shows how long the customer has been waiting
+- Button label changes to **Resume Call** while active
+- Dismissing resumes the call and fires a toast with the total hold time
+
+### Communication Panels
+- **Send Email** — compose modal pre-filled with customer email, company From address, case number reference, and a personalised greeting
+- **Send SMS** — compose modal with live character counter (amber at 140, red past 160, multi-SMS warning)
+- **Teams Message** — Microsoft Teams-style compose panel with channel selector, priority selector, and abbreviation tip strip; starter message pre-filled with case and account details
+
+### Phonetic Alphabet
+- Collapsible panel in the right column, below Quick Actions
+- Full NATO alphabet (Alpha–Zulu) in a compact two-column grid
+- Expand/collapse with a single click on the section header
+- No letter labels — word-only display to minimise width
 
 ### Company Themes
 - Four company profiles: **Generic Company**, **PB Tech**, **JB Hi-Fi**, **Harvey Norman**
@@ -166,7 +208,14 @@ Click **✎ + NOTE** (bottom right) to create a floating note. Notes are draggab
 
 ## Changelog
 
-### v0.5.0 — Example Customer Database & Training Scenarios
+### v0.6.0 — Scenario Creator, Hold Timer, Phonetic Alphabet & Communication Panels
+- Added **Scenario Creator** — build and save custom practice scenarios from Settings, stored in `localStorage`, appearing in the scenario dropdown under "My Scenarios" with full Load / Edit / Delete controls
+- Added **Hold Timer** — compact amber popup in the top-right corner showing a live `MM:SS` hold count-up; Place on Hold and Resume Call toggle the timer; total hold time shown in toast on resume
+- Added **Phonetic Alphabet** — collapsible two-column reference panel in the right column; word-only display (no letter labels) to fit the panel width
+- Converted **Send Email** Quick Action into a compose modal pre-filled with customer email, company From address, case reference, and personalised greeting
+- Converted **Send SMS** Quick Action into a compose modal with live character counter (amber/red thresholds, multi-SMS warning)
+- Added **Teams Message** Quick Action with channel selector, priority selector, abbreviation tip strip, and case-pre-filled starter message
+- Custom scenarios in the scenario dropdown are ordered: Training Scenarios → My Scenarios → Example Customers
 - Added **▤ SCENARIO** loader bar to the top of the Caller Identity panel
 - Built a database of **22 pre-built scenarios** in `crm-simulator.js`:
   - 2 structured training scenarios pinned to the top of the list
