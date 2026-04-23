@@ -1089,7 +1089,9 @@ function _holdStart() {
   holdRunning = true;
   holdSecs = 0;
   holdRenderDisp();
-  document.getElementById('holdBanner').classList.add('active');
+  const banner = document.getElementById('holdBanner');
+  banner.style.display = 'flex';
+  banner.classList.add('active');
   document.getElementById('holdBtnLabel').textContent = 'Resume Call';
   holdInt = setInterval(() => { holdSecs++; holdRenderDisp(); }, 1000);
   toast('⏸ Customer placed on hold');
@@ -1098,7 +1100,9 @@ function _holdStart() {
 function _holdStop() {
   holdRunning = false;
   clearInterval(holdInt);
-  document.getElementById('holdBanner').classList.remove('active');
+  const banner = document.getElementById('holdBanner');
+  banner.style.display = 'none';
+  banner.classList.remove('active');
   document.getElementById('holdBtnLabel').textContent = 'Place on Hold';
   toast('▶ Call resumed — hold time: ' + fmtHoldTime(holdSecs));
   holdSecs = 0;
@@ -1156,14 +1160,13 @@ function togglePhonetic() {
    COMMS MODALS — EMAIL / SMS / TEAMS
    ============================================================ */
 function openComms(type) {
-  // Pre-fill customer details from the current interaction
   const name  = document.getElementById('fName')?.value  || '';
   const email = document.getElementById('fEmail')?.value || '';
   const phone = document.getElementById('fPhone')?.value || '';
   const caseN = document.getElementById('caseNum')?.textContent || '';
   const co    = CO[curCo] || CO.generic;
 
-  document.getElementById('commsOverlay').classList.add('open');
+  document.getElementById('commsOverlay').style.display = 'block';
 
   if (type === 'email') {
     document.getElementById('emailTo').value      = email;
@@ -1173,21 +1176,21 @@ function openComms(type) {
     document.getElementById('emailStatus').textContent = '';
     const greeting = name ? `Dear ${name.split(' ')[0]},` : 'Dear Customer,';
     document.getElementById('emailBody').value = `${greeting}\n\nThank you for contacting ${co.name} today.\n\n\n\nKind regards,\n[Your Name]\n${co.name} Customer Service`;
-    document.getElementById('commsEmail').classList.add('open');
+    document.getElementById('commsEmail').style.display = 'flex';
 
   } else if (type === 'sms') {
     document.getElementById('smsTo').value  = phone;
     document.getElementById('smsBody').value = '';
     document.getElementById('smsStatus').textContent = '';
     document.getElementById('smsCharCount').textContent = '0 / 160 characters';
-    document.getElementById('commsSms').classList.add('open');
+    document.getElementById('commsSms').style.display = 'flex';
     document.getElementById('smsBody').addEventListener('input', updateSmsCount);
 
   } else if (type === 'teams') {
     document.getElementById('teamsTo').value   = '';
     document.getElementById('teamsBody').value = caseN ? `Re: ${caseN} — cx: ${name || '[name]'}, acct: ${document.getElementById('fAcct')?.value || '[acct]'}. ` : '';
     document.getElementById('teamsStatus').textContent = '';
-    document.getElementById('commsTeams').classList.add('open');
+    document.getElementById('commsTeams').style.display = 'flex';
   }
 }
 
@@ -1200,10 +1203,10 @@ function updateSmsCount() {
 }
 
 function closeComms() {
-  document.getElementById('commsOverlay').classList.remove('open');
-  document.getElementById('commsEmail').classList.remove('open');
-  document.getElementById('commsSms').classList.remove('open');
-  document.getElementById('commsTeams').classList.remove('open');
+  document.getElementById('commsOverlay').style.display = 'none';
+  ['commsEmail','commsSms','commsTeams'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
 }
 
 function sendComms(type) {
@@ -1220,13 +1223,13 @@ function sendComms(type) {
 function openScenarioCreator() {
   closeSettings();
   renderScenarioList();
-  document.getElementById('scenarioOverlay').classList.add('open');
-  document.getElementById('scenarioModal').classList.add('open');
+  document.getElementById('scenarioOverlay').style.display = 'block';
+  document.getElementById('scenarioModal').style.display = 'flex';
 }
 
 function closeScenarioCreator() {
-  document.getElementById('scenarioOverlay').classList.remove('open');
-  document.getElementById('scenarioModal').classList.remove('open');
+  document.getElementById('scenarioOverlay').style.display = 'none';
+  document.getElementById('scenarioModal').style.display = 'none';
   clearScenarioForm();
 }
 

@@ -762,7 +762,7 @@
 <!-- ============================================================
      HOLD BANNER
      ============================================================ -->
-<div class="hold-banner" id="holdBanner">
+<div class="hold-banner" id="holdBanner" style="display:none;">
   <div class="hold-dot"></div>
   <span class="hold-label">CUSTOMER ON HOLD</span>
   <div class="hold-music">♫ hold music playing</div>
@@ -773,10 +773,10 @@
 <!-- ============================================================
      COMMS MODALS — EMAIL / SMS / TEAMS
      ============================================================ -->
-<div class="modal-overlay" id="commsOverlay" onclick="closeComms()"></div>
+<div class="modal-overlay" id="commsOverlay" onclick="closeComms()" style="display:none;"></div>
 
 <!-- Email -->
-<div class="comms-modal" id="commsEmail">
+<div class="comms-modal" id="commsEmail" style="display:none;">
   <div class="comms-header email-header">
     <div class="comms-header-left">
       <span class="comms-app-icon">✉</span>
@@ -821,7 +821,7 @@ Customer Service Team"></textarea>
 </div>
 
 <!-- SMS -->
-<div class="comms-modal" id="commsSms">
+<div class="comms-modal" id="commsSms" style="display:none;">
   <div class="comms-header sms-header">
     <div class="comms-header-left">
       <span class="comms-app-icon">💬</span>
@@ -854,7 +854,7 @@ Customer Service Team"></textarea>
 </div>
 
 <!-- Teams -->
-<div class="comms-modal" id="commsTeams">
+<div class="comms-modal" id="commsTeams" style="display:none;">
   <div class="comms-header teams-header">
     <div class="comms-header-left">
       <span class="comms-app-icon">🟣</span>
@@ -901,8 +901,8 @@ Customer Service Team"></textarea>
 <!-- ============================================================
      SCENARIO CREATOR MODAL
      ============================================================ -->
-<div class="modal-overlay" id="scenarioOverlay" onclick="closeScenarioCreator()"></div>
-<div class="scenario-modal" id="scenarioModal">
+<div class="modal-overlay" id="scenarioOverlay" onclick="closeScenarioCreator()" style="display:none;"></div>
+<div class="scenario-modal" id="scenarioModal" style="display:none;">
   <div class="scenario-modal-header">
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="color:var(--accent);font-size:1rem;">✎</span>
